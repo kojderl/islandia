@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Islandia 2027</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky map beside a day-by-day timeline; day chips drive both. Palette: basalt neutrals + glacier teal, lava orange only for warnings. */
+:root{
+  --bg:#F2F5F6; --surface:#FFFFFF; --fg:#13222A; --muted:#566A74; --line:#D5DEE2;
+  --accent:#0A7487; --accent-ink:#FFFFFF; --lava:#B8481F; --land:#E1E9EC; --sea:#C9DDE6; --ok:#2E7D4F;
+  --font-display:"Bricolage Grotesque","Inter",system-ui,sans-serif;
+  --font-body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0D161B; --surface:#152228; --fg:#E6EEF1; --muted:#9BB0B9; --line:#26383F;
+  --accent:#4FC3D6; --accent-ink:#06222A; --lava:#F08A63; --land:#1D2D34; --sea:#0F1C22; --ok:#6CCB8F; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D161B; --surface:#152228; --fg:#E6EEF1; --muted:#9BB0B9; --line:#26383F;
+  --accent:#4FC3D6; --accent-ink:#06222A; --lava:#F08A63; --land:#1D2D34; --sea:#0F1C22; --ok:#6CCB8F; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--font-body);
+  padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+h1,h2,h3{font-family:var(--font-display);line-height:1.15;margin:0;text-wrap:balance}
+h1{font-size:clamp(30px,6vw,48px);letter-spacing:-.02em}
+h2{font-size:22px;letter-spacing:-.01em}
+h3{font-size:18px}
+p{margin:0}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.eyebrow{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+header{display:flex;flex-direction:column;gap:8px}
+.facts{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--muted);font-size:14px}
+.facts b{color:var(--fg);font-weight:600}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+.chip{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;
+  padding:7px 14px;font:inherit;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;line-height:1.2}
+.chip small{color:var(--muted);font-size:11px;font-weight:500}
+.chip[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip[aria-selected="true"] small{color:inherit;opacity:.85}
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start}
+@media (min-width:1000px){.layout{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}.mapcol{position:sticky;top:env(safe-area-inset-top,0px);top:16px}}
+.mapcol{display:flex;flex-direction:column;gap:8px;min-width:0}
+.mapwrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--sea)}
+#map{display:block;width:100%;min-width:620px;height:auto}
+.maplegend{font-size:12px;color:var(--muted)}
+.daycol{display:flex;flex-direction:column;gap:16px;min-width:0}
+.dayhead{display:flex;flex-direction:column;gap:6px}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.pill{font-size:12px;font-weight:600;border:1px solid var(--line);border-radius:999px;padding:3px 10px;background:var(--surface);color:var(--muted)}
+.pill.warn{color:var(--lava);border-color:var(--lava)}
+.tl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.tl li{display:grid;grid-template-columns:54px minmax(0,1fr);gap:12px;padding:10px 0;border-top:1px solid var(--line);cursor:default}
+.tl li:first-child{border-top:0}
+.tl time{font-variant-numeric:tabular-nums;font-weight:600;color:var(--muted);font-size:13px;padding-top:2px}
+.tl .ttl{font-weight:600;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.tl .num{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:12px;font-weight:700}
+.tl .note{color:var(--muted);font-size:14px}
+.tl li.hot{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.tl li[data-place]{cursor:pointer}
+.tl .tip{color:var(--lava);font-size:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:14px}
+.stay{display:flex;flex-direction:column;gap:3px;border-top:1px solid var(--line);padding-top:10px}
+.stay:first-child{border-top:0;padding-top:0}
+.stay .d{font-size:12px;color:var(--muted);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.check{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line)}
+.check:first-of-type{border-top:0}
+.check input{margin-top:4px;width:18px;height:18px;accent-color:var(--accent);flex:0 0 auto}
+.check label{display:flex;flex-direction:column;gap:2px;cursor:pointer;min-width:0}
+.check small{color:var(--muted);font-size:13px}
+.check input:checked+label b{text-decoration:line-through;color:var(--muted)}
+.prog{font-size:13px;color:var(--muted)}
+.bar{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+ul.plain{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+footer{color:var(--muted);font-size:13px}
+.metas{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin-top:4px}
+.rate{font-size:13px;color:var(--muted);display:inline-flex;gap:4px;align-items:baseline}
+.rate b{color:var(--fg)}
+.star{color:var(--accent)}
+.pill.price{color:var(--fg);border-color:var(--accent)}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px}
+.field{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted)}
+.field input,.tbl select{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px;min-width:0}
+.tbl{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.tbl th,.tbl td{padding:9px 8px;border-top:1px solid var(--line);text-align:left;vertical-align:top}
+.tbl th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-top:0}
+.tbl td:last-child,.tbl th:last-child{text-align:right;white-space:nowrap}
+.tbl label{display:flex;gap:8px;align-items:center;cursor:pointer}
+.tbl input[type=checkbox]{width:17px;height:17px;accent-color:var(--accent)}
+.sum{display:flex;flex-direction:column;gap:6px;margin-top:4px;font-variant-numeric:tabular-nums}
+.sum div{display:flex;justify-content:space-between;gap:12px}
+.sum .big{font-family:var(--font-display);font-size:22px;border-top:1px solid var(--line);padding-top:8px}
+.opt{border-top:1px solid var(--line);padding-top:10px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.opt .k{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.pill.ok{color:var(--ok);border-color:var(--ok)}
+.pill.warn2{color:var(--lava);border-color:var(--lava)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <span class="eyebrow">4–11 września 2027 · 5 osób · samochód 7-miejscowy</span>
+  <h1>Islandia 2027</h1>
+  <div class="facts">
+    <span><b>7 nocy</b> w 7 miejscach</span>
+    <span><b>ok. 1 730 km</b> orientacyjnie</span>
+    <span>Przylot <b>sob. 18:00</b></span>
+    <span>Wylot <b>sob. 18:50</b></span>
+  </div>
+</header>
+
+<nav aria-label="Wybór dnia"><div class="chips" id="chips" role="tablist"></div></nav>
+
+<div class="layout" id="layout">
+  <div class="mapcol">
+    <div class="mapwrap"><svg id="map" viewBox="0 0 820 370" role="img" aria-label="Schematyczna mapa trasy po Islandii"></svg></div>
+    <p class="maplegend">Mapa schematyczna (zarys wyspy uproszczony). Kliknij punkt na mapie albo pozycję na liście, żeby go podświetlić.</p>
+  </div>
+  <section class="daycol" id="day" aria-live="polite"></section>
+</div>
+<section id="costs" hidden></section>
+<section id="stays-view" hidden></section>
+
+<section class="wrap" style="gap:14px">
+  <h2>Noclegi</h2>
+  <div class="card" id="stays"></div>
+</section>
+
+<section class="grid2">
+  <div class="card">
+    <h2>Do zarezerwowania</h2>
+    <div><div class="bar"><i id="barfill"></i></div><p class="prog" id="prog"></p></div>
+    <div id="checks"></div>
+    <p class="prog">Zaznaczenia zapisują się tylko w Twojej przeglądarce. Znajomi mają własną listę.</p>
+  </div>
+  <div class="card">
+    <h2>Zanim ruszycie</h2>
+    <ul class="plain">
+      <li><b>Pogoda i drogi:</b> sprawdzajcie road.is, safetravel.is i vedur.is każdego ranka. Plan ma zapas, ale wycieczki lodowcowe mogą się przesunąć.</li>
+      <li><b>Reynisfjara:</b> nie podchodźcie do wody. Fale wciągają ludzi bez ostrzeżenia.</li>
+      <li><b>Lodowiec i jaskinia:</b> tylko z licencjonowanym przewodnikiem. Potrzebne buty za kostkę.</li>
+      <li><b>Samochód:</b> ochrona od szutru (GP) i od piasku i popiołu (SAAP). 4x4 nie jest potrzebny na tej trasie.</li>
+      <li><b>Parkingi:</b> wiele atrakcji pobiera opłaty, często przez aplikację.</li>
+      <li><b>Paliwo:</b> stacje samoobsługowe wymagają karty z kodem PIN.</li>
+      <li><b>Reykjanes:</b> przed 11.09 sprawdźcie status dróg do Blue Lagoon (aktywność wulkaniczna).</li>
+      <li><b>Zorza:</b> początek września to wczesny sezon. Szansa jest, gwarancji nie ma.</li>
+    </ul>
+  </div>
+</section>
+<footer>Czasy i odległości są orientacyjne. Oceny: TripAdvisor, stan na 22.11.2026. Ceny z lat 2025–2026 przeliczone po kursach Wise z 22.11.2026. Przed rezerwacją sprawdźcie aktualne ceny i godziny u operatorów.</footer>
+</div>
+<script>
+"use strict";
+/* [name, lat, lon, nudgeX, nudgeY (screen px)] */
+const P={
+kef:["Lotnisko Keflavík",63.985,-22.605,0,0],
+rvk:["Reykjavík",64.147,-21.94,0,-4],
+skylagoon:["Sky Lagoon",64.112,-21.917,10,12],
+bluelagoon:["Blue Lagoon",63.88,-22.449,0,0],
+thingvellir:["Þingvellir",64.255,-21.13,0,0],
+geysir:["Geysir i Strokkur",64.31,-20.30,-8,-6],
+gullfoss:["Gullfoss",64.327,-20.12,10,6],
+borgarnes:["Borgarnes",64.538,-21.92,0,0],
+budir:["Búðakirkja",64.82,-23.38,0,0],
+arnarstapi:["Arnarstapi i Hellnar",64.77,-23.62,0,6],
+londrangar:["Lóndrangar",64.74,-23.78,0,6],
+djupalon:["Djúpalónssandur",64.756,-23.90,-4,-8],
+kirkjufell:["Kirkjufell",64.94,-23.31,-6,-10],
+grundar:["Grundarfjörður",64.925,-23.26,10,8],
+seljalandsfoss:["Seljalandsfoss",63.616,-19.99,0,0],
+skogafoss:["Skógafoss",63.532,-19.51,0,0],
+vik:["Vík",63.419,-19.006,4,-14],
+reynisfjara:["Reynisfjara",63.404,-19.045,13,8],
+dyrholaey:["Dyrhólaey",63.40,-19.13,-13,8],
+katla:["Kötlujökull (jaskinia Katla)",63.58,-18.78,0,0],
+eldhraun:["Eldhraun",63.75,-18.35,0,0],
+fjadra:["Fjaðrárgljúfur",63.77,-18.17,6,-8],
+klaustur:["Kirkjubæjarklaustur",63.79,-18.06,8,6],
+skaftafell:["Skaftafell",64.016,-16.97,0,0],
+jokulsarlon:["Jökulsárlón",64.048,-16.18,-6,-8],
+diamond:["Diamond Beach",64.044,-16.17,12,10],
+hofn:["Höfn",64.253,-15.21,0,0]};
+/* Coarse outline [lon,lat] */
+const OUT=[[-22.7,63.85],[-21.9,63.83],[-20.9,63.78],[-20.2,63.72],[-19.5,63.52],[-19.13,63.40],[-18.4,63.45],[-17.6,63.65],[-17.0,63.78],[-16.4,63.85],[-16.0,64.0],[-15.5,64.15],[-15.2,64.28],[-14.6,64.45],[-14.0,64.75],[-13.7,65.0],[-13.6,65.3],[-14.0,65.7],[-14.5,66.3],[-16.5,66.5],[-18.2,66.15],[-20.2,66.1],[-20.9,65.75],[-21.5,65.95],[-22.4,66.45],[-23.5,66.2],[-24.5,65.5],[-23.5,65.5],[-22.5,65.3],[-22.0,65.15],[-22.7,65.07],[-23.26,64.93],[-23.7,64.9],[-24.05,64.88],[-23.8,64.78],[-23.38,64.82],[-22.6,64.75],[-22.2,64.58],[-21.92,64.54],[-21.7,64.4],[-21.9,64.15],[-22.3,64.0]];
+/* Glacier caps [lon,lat,rx(deg lon),ry(deg lat)] */
+const ICE=[[-16.8,64.4,1.3,0.33],[-19.1,63.65,0.3,0.12],[-20.2,64.7,0.35,0.12],[-23.78,64.8,0.1,0.05]];
+const bk=(s,a,b)=>"https://www.booking.com/hotel/is/"+s+".pl.html?checkin=2027-09-"+a+"&checkout=2027-09-"+b+"&group_adults=5&no_rooms=1";
+const STAYS=[
+["4.09","Reykjavík","City Apartments",bk("city-apartments","04","05"),"Przylot o 18:00, dojazd po 21:00. Potwierdźcie samodzielny check-in."],
+["5.09","Borgarnes","Milli Vina Guesthouse",bk("milli-vina-guesthouse-borgarnes","05","06"),"Sprawdźcie, czy pokoje dają 5 łóżek i czy jest kuchnia."],
+["6.09","Grundarfjörður i okolice","Snæfellsjökull Apartments",bk("snaefellsjokull-apartments","06","07"),"Zweryfikujcie lokalizację względem Grundarfjörður i Kirkjufell."],
+["7.09","Vík","The Barn",bk("the-barn","07","08"),"Blisko punktu zbiórki na Katlę (Austurvegur)."],
+["8.09","Kirkjubæjarklaustur","The Holiday Houses",bk("the-holiday-houses-kirkjubaejarklaustur","08","09"),"Jutro start hiku w Skaftafell, ok. godzina jazdy."],
+["9.09","Höfn","Höfn Guesthouse",bk("hofn-guesthouse","09","10"),"Kolacja w Höfn. Jutro najdłuższy przejazd."],
+["10.09","Reykjavík","Aska Hraun",bk("aska-hraun","10","11"),"Sprawdźcie dystans do Sky Lagoon i lotniska."]];
+/* item: [time, placeId|null, title, note, tip] */
+const DAYS=[
+{id:"dzien-1",chip:"Sob 4.09",sub:"Przylot",title:"Przylot i Reykjavík",stay:0,km:"ok. 50 km",drive:"ok. 45 min",tags:["lot 18:00"],items:[
+["18:00","kef","Lądowanie w Keflavíku","Alkohol najtaniej kupicie w sklepie bezcłowym na lotnisku, zaraz po odprawie."],
+["19:00","kef","Odbiór samochodu","Auto 7-miejscowe. Zróbcie zdjęcia stanu przed wyjazdem."],
+["20:30",null,"Zakupy w markecie","Sprawdźcie godziny sklepów, bo wieczorem nie wszystkie są czynne.","Nie planujcie Blue Lagoon na ten wieczór."],
+["21:30","rvk","Apartament w Reykjavíku","Odpoczynek. Jutro start o 8:00."]]},
+{id:"dzien-2",chip:"Nie 5.09",sub:"Złoty Krąg",title:"Złoty Krąg i przejazd na zachód",stay:1,km:"ok. 270 km",drive:"ok. 4–4,5 h",tags:["Borgarnes"],items:[
+["08:00","rvk","Śniadanie i wyjazd","Dojazd do Þingvellir ok. 45 minut."],
+["09:00","thingvellir","Þingvellir","Rozpadlina między płytami tektonicznymi i szlak do Öxarárfoss. Parking jest płatny."],
+["11:00","geysir","Geysir i Strokkur","Strokkur wybucha co kilka minut."],
+["12:15","gullfoss","Gullfoss","Dwa tarasy widokowe, dolny jest bliżej wody."],
+["13:30",null,"Obiad","Przy Gullfoss albo Geysir."],
+["14:30","borgarnes","Przejazd do Borgarnes","Droga przez Þingvellir i Uxahryggir, ok. 2 h 15 min. Dojazd ok. 17:00–17:30.","Hraunfossar i Barnafoss odpadają. To ok. godziny w jedną stronę."],
+["21:30",null,"Niebo wieczorem","Zorza jest możliwa, ale nie planujcie pod nią dnia. Prognoza: vedur.is."]]},
+{id:"dzien-3",chip:"Pon 6.09",sub:"Snæfellsnes",title:"Półwysep Snæfellsnes",stay:2,km:"ok. 220 km",drive:"ok. 4 h",tags:["pętla w prawo"],items:[
+["08:30","borgarnes","Wyjazd z Borgarnes","Jedźcie drogą 54. Najpierw wybrzeże południowe, Kirkjufell na koniec."],
+["09:45","budir","Búðakirkja","Czarny drewniany kościółek na polu lawowym."],
+["10:45","arnarstapi","Arnarstapi i Hellnar","Spacer klifami między wioskami, ok. 2,5 km."],
+["12:15","londrangar","Lóndrangar","Bazaltowe iglice widoczne z parkingu i ścieżki."],
+["13:00","djupalon","Djúpalónssandur","Czarna plaża z kamieniami do podnoszenia. Krótki szutrowy dojazd."],
+["15:00",null,"Obiad w Ólafsvík lub Hellissandur","Po drodze na północną stronę półwyspu."],
+["17:00","kirkjufell","Kirkjufell i Kirkjufellsfoss","Najlepsze światło pod wieczór. Zachód słońca ok. 20:15."],
+["19:30","grundar","Grundarfjörður","Kolacja i nocleg."]]},
+{id:"dzien-4",chip:"Wto 7.09",sub:"Na południe",title:"Przejazd na południe z wodospadami",stay:3,km:"ok. 330 km",drive:"ok. 5 h",tags:["Vík"],items:[
+["08:30","grundar","Wyjazd z Grundarfjörður","Przez Borgarnes i tunel Hvalfjörður do Reykjavíku."],
+["11:00","rvk","Reykjavík: obiad i zakupy","Uzupełnijcie zapasy na dwa kolejne dni."],
+["12:30",null,"Dalej Ringiem na wschód","Ok. 1 h 45 min do Seljalandsfoss."],
+["14:15","seljalandsfoss","Seljalandsfoss","Można przejść za kurtyną wody. Weźcie kurtki."],
+["15:15","skogafoss","Skógafoss","Schody na szczyt dają widok na rzekę."],
+["16:30","vik","Vík","Zameldowanie i spacer po miasteczku."],
+["18:00","reynisfjara","Reynisfjara","Czarna plaża i słupy bazaltowe. Nie podchodźcie do wody.","Fale wciągają ludzi bez ostrzeżenia."]]},
+{id:"dzien-5",chip:"Śro 8.09",sub:"Katla",title:"Jaskinia lodowa Katla i wschód",stay:4,km:"ok. 120 km",drive:"ok. 2 h",tags:["wycieczka","Katla"],items:[
+["08:30","vik","Śniadanie w Vík","Zbiórka na Katlę zwykle przy Austurvegur, 15 min przed startem."],
+["09:00","katla","Jaskinia Katla","Wycieczka super jeepem, ok. 3 h. Buty za kostkę. Godzinę ustawcie przy rezerwacji.","Tylko z licencjonowanym przewodnikiem."],
+["12:30","vik","Obiad w Vík","Zapas na przesunięcie wycieczki."],
+["13:30","dyrholaey","Dyrhólaey","Klify i latarnia, ok. 20 min od Vík. Tu też możecie nadrobić Reynisfjarę."],
+["15:30","eldhraun","Eldhraun","Pole lawowe pokryte mchem, postój przy drodze."],
+["16:45","fjadra","Fjaðrárgljúfur","Wąski kanion, krótki spacer wzdłuż krawędzi."],
+["18:00","klaustur","Kirkjubæjarklaustur","Nocleg i kolacja."]]},
+{id:"dzien-6",chip:"Czw 9.09",sub:"Lodowiec",title:"Lodowiec, Jökulsárlón i Diamond Beach",stay:5,km:"ok. 210 km",drive:"ok. 3 h",tags:["hik 3–3,5 h","Zodiac"],items:[
+["07:45","klaustur","Wyjazd na Skaftafell","Ok. godziny jazdy. Zbiórkę ustawcie przy rezerwacji."],
+["09:30","skaftafell","Hik po lodowcu Vatnajökull","Wybierzcie wersję 3–3,5 h. Raki, kask i czekan dostaniecie na miejscu.","Wersja 5-godzinna nie zmieści się z Zodiakiem."],
+["13:15",null,"Szybki obiad","W Skaftafell lub po drodze."],
+["14:00",null,"Przejazd do Jökulsárlón","Ok. godziny jazdy."],
+["15:30","jokulsarlon","Rejs Zodiakiem","Rezerwacja na stałą godzinę. Tańsza amfibia to dobra alternatywa."],
+["17:30","diamond","Diamond Beach","Bryły lodu na czarnym piasku. Bierzcie ciepłe rzeczy, wieje."],
+["18:30","hofn","Höfn","Kolacja i nocleg."]]},
+{id:"dzien-7",chip:"Pią 10.09",sub:"Powrót",title:"Długi powrót do Reykjavíku",stay:6,km:"ok. 460 km",drive:"ok. 6 h",tags:["Sky Lagoon"],items:[
+["08:00","hofn","Wyjazd z Höfn","Najdłuższy przejazd wyprawy."],
+["11:00","eldhraun","Eldhraun","Krótki postój. Jeśli plan przesunął się wcześniej, to dodatkowa okazja."],
+["12:30","vik","Obiad w Vík","Ostatni dłuższy przystanek."],
+["15:30",null,"Kawa po drodze","Selfoss lub Hveragerði."],
+["17:30","rvk","Zameldowanie w Reykjavíku","Odpoczynek."],
+["19:30","skylagoon","Sky Lagoon (opcjonalnie)","Jesienią czynne do 22:00. Możecie też zostawić wieczór na kolację w mieście.","Blue Lagoon zróbcie jutro rano zamiast Sky Lagoon, nie obie."]]},
+{id:"dzien-8",chip:"Sob 11.09",sub:"Wylot",title:"Wylot",stay:-1,km:"ok. 70 km",drive:"ok. 1,2 h",tags:["lot 18:50"],items:[
+["08:30","rvk","Śniadanie i wymeldowanie","Spakowane auto, zapas na korki."],
+["10:30","bluelagoon","Blue Lagoon (opcjonalnie)","25 min od lotniska. Wymaga rezerwacji i sprawdzenia drogi.","Alternatywa: Reykjanes (Gunnuhver, Most między kontynentami)."],
+["13:30",null,"Tankowanie","Zwrot auta zwykle z pełnym bakiem."],
+["14:30","kef","Zwrot samochodu","Zostawcie zapas na formalności."],
+["15:45","kef","Odprawa","Wylot 18:50."]]}];
+const TODO=[
+["Auto 7-miejscowe z GP i SAAP","Pięć osób z bagażami nie zmieści się w zwykłym SUV-ie."],
+["Katla Ice Cave, 8.09 rano","Wrzesień to najbardziej oblegany miesiąc. Wybierzcie opcję z darmową anulacją."],
+["Hik po lodowcu Skaftafell, 9.09 rano","Wersja 3–3,5 h."],
+["Zodiak lub amfibia w Jökulsárlón, 9.09 po południu","Godzina po zakończeniu hiku."],
+["Sky Lagoon, 10.09 wieczorem","Albo Blue Lagoon 11.09 rano, nie oba."],
+["Noclegi: darmowa anulacja","Sprawdźcie łóżka dla 5 osób, kuchnię, parking i godzinę zameldowania."],
+["Buty za kostkę dla każdego","Wymagane na Katli i na hiku."],
+["Karta z PIN-em do dystrybutorów","Samoobsługowe stacje paliw."],
+["Aplikacje: safetravel.is, road.is, vedur.is","Do sprawdzania co rano."],
+["Alkohol w sklepie bezcłowym na lotnisku","Przy przylocie, 4.09."]];
+/* Kursy: Wise, 22.11.2026 */
+const FX={ISK:0.03249,USD:4.064,EUR:4.404};
+const TA="https://www.tripadvisor.com/Attraction_Review-";
+/* Oceny TripAdvisor [ocena, liczba opinii, adres], stan na 22.11.2026 */
+const RATE={
+thingvellir:[4.6,4304,TA+"g315853-d276576-Reviews-Thingvellir_National_Park-Thingvellir_South_Region.html"],
+geysir:[4.5,7255,TA+"g7940590-d553848-Reviews-Strokkur-Blaskogabyggd_South_Region.html"],
+gullfoss:[4.7,12567,TA+"g7940590-d1740559-Reviews-Gullfoss_Falls-Blaskogabyggd_South_Region.html"],
+budir:[4.3,322,TA+"g1537454-d19063328-Reviews-Budakirkja-Budir_West_Region.html"],
+arnarstapi:[4.8,16,TA+"g12873242-d20362467-Reviews-Arnarstapi_Hellnar_Hike-Arnarstapi_West_Region.html"],
+londrangar:[4.5,272,TA+"g671732-d3940576-Reviews-Londrangar_Basalt_Cliffs-Hellnar_West_Region.html"],
+djupalon:[4.5,200,TA+"g671732-d10731155-Reviews-Djupalonssandur_Beach-Hellnar_West_Region.html"],
+kirkjufell:[4.5,725,TA+"g666462-d6620646-Reviews-Kirkjufell_Mountain-Grundarfjorour_West_Region.html"],
+seljalandsfoss:[4.7,3130,TA+"g608875-d555030-Reviews-Seljalandsfoss_waterfall-Hella_South_Region.html"],
+skogafoss:[4.7,4260,TA+"g608884-d555031-Reviews-Skogafoss-Skogar_South_Region.html"],
+reynisfjara:[4.7,2247,TA+"g189978-d8004333-Reviews-Reynisfjara_Beach-Vik_South_Region.html"],
+dyrholaey:[4.7,2061,TA+"g189978-d1380590-Reviews-Dyrholaey-Vik_South_Region.html"],
+katla:[4.4,75,TA+"g189978-d18856642-Reviews-Katla_Ice_Cave_Kerlingardalsvegur-Vik_South_Region.html"],
+eldhraun:[4.1,31,TA+"g315850-d21255343-Reviews-Eldhraun_Lava_Field-Kirkjubaejarklaustur_South_Region.html"],
+fjadra:[4.7,933,TA+"g315850-d6781780-Reviews-Fjadrargljufur_Canyon-Kirkjubaejarklaustur_South_Region.html"],
+skaftafell:[4.7,1175,TA+"g612424-d522831-Reviews-Skaftafell_National_Park-Vatnajokull_National_Park_East_Region.html"],
+hike:[4.6,129,"https://www.tripadvisor.com/AttractionProductReview-g612425-d11460815-Skaftafell_Blue_Ice_Glacier_Hike_on_Vatnajokull-Skaftafell_Vatnajokull_National_Pa.html"],
+jokulsarlon:[4.9,5109,TA+"g12344476-d276577-Reviews-or10-Glacier_Lagoon-Jokulsarlon_East_Region.html"],
+diamond:[4.7,228,TA+"g12344476-d23692562-Reviews-Diamond_Beach-Jokulsarlon_East_Region.html"],
+skylagoon:[4.5,5192,TA+"g1093088-d23356671-Reviews-Sky_Lagoon-Kopavogur_Capital_Region.html"],
+bluelagoon:[4.4,20362,TA+"g608874-d207805-Reviews-Blue_Lagoon-Grindavik_Reykjanes_Peninsula.html"]};
+/* Bilety, cena za osobę w walucie operatora (2025-2026) */
+const FEE={
+katla:{cur:"USD",amt:243,from:1},
+hike:{cur:"USD",amt:115,from:1},
+zodiac:{cur:"ISK",amt:16900},
+amphi:{cur:"ISK",amt:7100},
+sky:{cur:"ISK",amt:14990},
+blue:{cur:"ISK",amt:12990,from:1}};
+const FEEKEY={katla:"katla",skaftafell:"hike",jokulsarlon:"zodiac",skylagoon:"sky",bluelagoon:"blue"};
+/* Parking za jedno auto, ISK (dane z 2025, część do potwierdzenia) */
+const PARK={thingvellir:1000,geysir:1000,seljalandsfoss:900,skogafoss:1000,reynisfjara:1000,kirkjufell:1000,fjadra:1000,skaftafell:1000,jokulsarlon:1000};
+const bks=(q,a,b)=>"https://www.booking.com/searchresults.pl.html?ss="+encodeURIComponent(q)+"&checkin=2027-09-"+a+"&checkout=2027-09-"+b+"&group_adults=5&no_rooms=1&order=price";
+const RVK2=[{n:"Dwusypialniowy apartament w centrum (Bókhlöðustígur 6A)",f:"2 sypialnie (łóżka pojedyncze i piętrowe) plus sofa, do 6 osób, 0,3 km od centrum.",p:"od 225 USD (ok. 915 zł), strona nie podaje, czy za noc",u:"https://guidetoiceland.is/accommodation/iceland-apartments-reykjavik/city-centre-2-bdr-apartment"},
+{n:"Apartament w domu rodzinnym, Laugardalur",f:"2 sypialnie (2 łóżka queen) i dostawka w salonie, do 5 osób, 1 łazienka, ocena 9,8 z 18 opinii.",p:"cena po wybraniu dat",u:"https://www.expedia.com/Reykjavik-Hotels-Apartm-In-A-Family-House-With-2-Bedr-And-A-Living-Room-With-2-Beds.h28875295.Hotel-Information"}];
+/* ok: 1 spełnia, 0 wątpliwe, -1 nie spełnia */
+const NIGHTS=[
+{d:"4.09",town:"Reykjavík",a:"04",b:"05",cur:{n:"City Apartments",f:"Nie udało mi się odczytać szczegółów oferty, bo Booking blokuje odczyt. W linku widać dwa typy pokoi, na 3 i 2 osoby.",ok:0,t:"do sprawdzenia"},alts:RVK2},
+{d:"5.09",town:"Borgarnes",a:"05",b:"06",cur:{n:"Milli Vina Guesthouse",f:"Pensjonat z 6 pokojami (2-osobowe i rodzinne) i dużą wspólną kuchnią. Ocena gospodarzy 9,8. Nie jest jasne, czy każdy pokój ma własną łazienkę.",ok:1,t:"prywatne pokoje"},alts:[{n:"Bifrost Apartments",f:"Apartamenty 2- i 3-sypialniowe, trzysypialniowy mieści 5 osób. Ocena 7,8 z 14 opinii, więc słaby dowód jakości.",p:"brak ceny",u:"https://id.hotels.com/en/ho1247597280/bifrost-apartments-borgarnes-iceland"}],note:"Lepszej opcji w Borgarnes nie znalazłem. Öbbuhús ma 3 sypialnie, ale mieści tylko 4 osoby."},
+{d:"6.09",town:"Snæfellsnes",a:"06",b:"07",cur:{n:"Snæfellsjökull Apartments",f:"Apartamenty z 4 sypialniami, do 7–8 osób, pełna kuchnia. Od 215 USD (ok. 875 zł), strona nie podaje, czy za noc. To Hellissandur, 25–30 km od Grundarfjörður i Kirkjufell, na zachodnim końcu półwyspu.",ok:1,t:"standard spełnia, lokalizacja do przemyślenia"},alts:[{n:"Kirkjufell Guesthouse and Apartments (Grundarfjörður)",f:"Dwusypialniowy apartament z widokiem na Kirkjufell, do 5 osób. Ocena apartamentu 9,6, obiektu 9,4 z 746 opinii.",p:"cena po wybraniu dat",u:"https://www.expedia.ie/Grundarfjordur-Hotels-Kirkjufell-Guesthouse-And-Apartments.h27389246.Hotel-Information"}],note:"Przy noclegu w Hellissandur po Kirkjufell dojeżdżacie jeszcze kilkadziesiąt minut, a rano dojazd do Vík wydłuża się o podobny czas."},
+{d:"7.09",town:"Vík",a:"07",b:"08",cur:{n:"The Barn",f:"Hostel w Vík. Układu pokoi i łazienek nie udało mi się potwierdzić. W linku widać trzy pokoje (na 2, 2 i 1 osobę).",ok:0,t:"do sprawdzenia"},alts:[{n:"Vík Apartments",f:"Apartamenty 2-sypialniowe, jeden z sofą mieści do 6 osób. Ocena 9,8 z 907 opinii.",p:"od 211 USD/noc w grudniu 2026 (ok. 860 zł), latem drożej",u:"https://hotels.com/ho953870112/vik-apartments-vik-i-myrdal-iceland"},{n:"Signature by Vik Apartments",f:"Apartament z 3 sypialniami, do 6 osób, 0,1 km od centrum, ocena 9,2.",p:"od 745 USD (ok. 3 030 zł), raczej droższa",u:"https://guidetoiceland.is/accommodation/iceland-hotels-vik/signature-by-vik-apartments"}]},
+{d:"8.09",town:"Kirkjubæjarklaustur",a:"08",b:"09",cur:{n:"The Holiday Houses",f:"Dom z 3 sypialniami i 6 łóżkami pojedynczymi, do 6 osób, 2,1 km od centrum. Od 412 USD (ok. 1 675 zł), strona nie podaje, czy za noc.",ok:1,t:"spełnia"},alts:[],note:"Bez zmian. To już dom z trzema sypialniami."},
+{d:"9.09",town:"Höfn",a:"09",b:"10",cur:{n:"Höfn Guesthouse",f:"Pokoje 3-osobowe, wszystkie łazienki wspólne (dwie na cały obiekt). Ocena 8,2 z 282 opinii, śniadanie w cenie. Od 78 USD za pokój dla 2 osób w grudniu 2026.",ok:0,t:"pokoje prywatne, łazienki wspólne"},alts:[{n:"Hvammur Apartments",f:"2 sypialnie i 1 łazienka, do 6 osób, ocena 9,0 z 13 opinii. W obiekcie są tylko 2 jednostki, więc szybko znikają.",p:"cena po wybraniu dat",u:"https://www.expedia.com/go/hotel/info/23654471"}],note:"Apartament Hraunhóll na Airbnb ma 2 sypialnie, ale mieści tylko 4 osoby."},
+{d:"10.09",town:"Reykjavík",a:"10",b:"11",cur:{n:"Aska Hraun",f:"Adres to Dalshraun 15 w Hafnarfjörður, nie w Reykjavíku. W ofercie są apartamenty dwusypialniane z podstawowym wyposażeniem kuchennym. Od 105 USD za noc (ok. 425 zł) według serwisu pośrednika, który podaje też płatność z góry.",ok:1,t:"standard spełnia, poza centrum"},alts:RVK2,note:"Hafnarfjörður leży po drodze w stronę lotniska, więc 11.09 możecie wyjechać później. W zamian dalej macie do centrum Reykjavíku."}];
+</script>
+<script>
+(function(){
+var NS="http://www.w3.org/2000/svg",SW=820,SH=370;
+var $=function(id){return document.getElementById(id)};
+function el(tag,attrs,parent,text){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e}
+function h(tag,cls,text,parent){var e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;if(parent)parent.appendChild(e);return e}
+function proj(lon,lat){return[(lon+25)*68.2,(65.5-lat)*160]}
+var cur=-1,hot=null;
+function fmt(n){return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g," ")}
+function zl(x){return fmt(x)}
+function cvt(f){return f.amt*FX[f.cur]}
+function r5(x){return Math.round(x/5)*5}
+function dayPlaces(d){var out=[];d.items.forEach(function(it){if(it[1]&&out.indexOf(it[1])<0)out.push(it[1])});return out}
+function dayRoute(d){var out=[];d.items.forEach(function(it){if(it[1]&&out[out.length-1]!==it[1])out.push(it[1])});return out}
+
+function drawMap(){
+  var svg=$("map");while(svg.firstChild)svg.removeChild(svg.firstChild);
+  var d=cur>=0?DAYS[cur]:null,vb=[0,0,SW,SH];
+  if(d){
+    var ids=dayPlaces(d),xs=[],ys=[];
+    ids.forEach(function(id){var q=proj(P[id][2],P[id][1]);xs.push(q[0]);ys.push(q[1])});
+    var x0=Math.min.apply(0,xs),x1=Math.max.apply(0,xs),y0=Math.min.apply(0,ys),y1=Math.max.apply(0,ys);
+    var w=Math.max(x1-x0+110,200),hh=Math.max(y1-y0+90,w*SH/SW);
+    w=Math.max(w,hh*SW/SH);hh=w*SH/SW;
+    vb=[(x0+x1)/2-w/2,(y0+y1)/2-hh/2,w,hh];
+  }
+  svg.setAttribute("viewBox",vb.map(function(n){return n.toFixed(1)}).join(" "));
+  var k=vb[2]/SW;
+  el("rect",{x:vb[0]-500,y:vb[1]-500,width:vb[2]+1000,height:vb[3]+1000,style:"fill:var(--sea)"},svg);
+  el("polygon",{points:OUT.map(function(c){return proj(c[0],c[1]).join(",")}).join(" "),style:"fill:var(--land);stroke:var(--muted);stroke-width:"+(1*k)+";stroke-opacity:.5;stroke-linejoin:round"},svg);
+  ICE.forEach(function(g){var q=proj(g[0],g[1]);el("ellipse",{cx:q[0],cy:q[1],rx:g[2]*68.2,ry:g[3]*160,style:"fill:var(--surface);opacity:.85"},svg)});
+  function pos(id){var p=P[id],q=proj(p[2],p[1]);return[q[0]+p[3]*k,q[1]+p[4]*k]}
+  DAYS.forEach(function(dd,i){
+    if(i===cur)return;
+    var pts=dayRoute(dd).map(function(id){return pos(id).join(",")}).join(" ");
+    el("polyline",{points:pts,style:"fill:none;stroke:var(--accent);stroke-width:"+(2*k)+";stroke-linecap:round;stroke-linejoin:round;opacity:"+(d?.18:.55)},svg)});
+  if(d){
+    el("polyline",{points:dayRoute(d).map(function(id){return pos(id).join(",")}).join(" "),style:"fill:none;stroke:var(--accent);stroke-width:"+(3.2*k)+";stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:"+(7*k)+" "+(5*k)},svg);
+    dayPlaces(d).forEach(function(id,i){
+      var q=pos(id),on=hot===id,r=(on?15:12)*k;
+      var g=el("g",{style:"cursor:pointer",tabindex:"0",role:"button","aria-label":P[id][0]},svg);
+      el("circle",{cx:q[0],cy:q[1],r:r,style:"fill:"+(on?"var(--lava)":"var(--accent)")+";stroke:var(--surface);stroke-width:"+(2*k)},g);
+      el("text",{x:q[0],y:q[1]+4.2*k,"text-anchor":"middle",style:"font:700 "+(12*k)+"px Inter,sans-serif;fill:var(--accent-ink)"},g,String(i+1));
+      el("text",{x:q[0]+(r+4*k),y:q[1]+4*k,style:"font:600 "+(12*k)+"px Inter,sans-serif;fill:var(--fg);paint-order:stroke;stroke:var(--land);stroke-width:"+(3.5*k)+"px;stroke-linejoin:round"},g,P[id][0]);
+      g.addEventListener("click",function(){setHot(id,true)});
+      g.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();setHot(id,true)}});
+    });
+  }else{
+    var seen={};
+    DAYS.forEach(function(dd){dayPlaces(dd).forEach(function(id){seen[id]=1})});
+    Object.keys(seen).forEach(function(id){var q=pos(id);el("circle",{cx:q[0],cy:q[1],r:4*k,style:"fill:var(--accent);stroke:var(--surface);stroke-width:"+(1.5*k)},svg)});
+    ["rvk","borgarnes","grundar","vik","klaustur","hofn","kef"].forEach(function(id){var q=pos(id);
+      el("text",{x:q[0]+7*k,y:q[1]-6*k,style:"font:600 "+(12*k)+"px Inter,sans-serif;fill:var(--fg);paint-order:stroke;stroke:var(--land);stroke-width:"+(3.5*k)+"px;stroke-linejoin:round"},svg,P[id][0])});
+  }
+}
+function setHot(id,scroll){
+  hot=id;drawMap();
+  var rows=document.querySelectorAll("#day .tl li");
+  rows.forEach(function(li){var on=li.getAttribute("data-place")===id;li.classList.toggle("hot",on);if(on&&scroll&&li.scrollIntoView)li.scrollIntoView({block:"nearest",behavior:"smooth"})});
+}
+function drawDay(){
+  var box=$("day");box.textContent="";
+  if(cur<0){
+    var hd=h("div","dayhead",null,box);
+    h("span","eyebrow","Cała trasa",hd);h("h2",null,"Osiem dni, siedem noclegów",hd);
+    h("p",null,"Wybierz dzień, żeby zobaczyć godziny, przystanki i przybliżoną mapę.",hd);
+    var c=h("div","card",null,box);
+    DAYS.forEach(function(dd,i){
+      var b=h("button","chip",null,c);b.style.width="100%";b.style.borderRadius="8px";
+      h("span",null,dd.chip+" · "+dd.title,b);h("small",null,dd.km+" · "+dd.drive,b);
+      b.addEventListener("click",function(){go(i)})});
+    return}
+  var d=DAYS[cur],hd2=h("div","dayhead",null,box);
+  h("span","eyebrow",d.chip+" 2027",hd2);h("h2",null,d.title,hd2);
+  var m=h("div","meta",null,hd2);h("span","pill",d.km,m);h("span","pill","jazda "+d.drive,m);
+  d.tags.forEach(function(t){h("span","pill",t,m)});
+  if(d.stay>=0){var s=STAYS[d.stay],p=h("p","note",null,hd2);p.style.color="var(--muted)";p.appendChild(document.createTextNode("Nocleg: "));
+    var a=h("a",null,s[2]+", "+s[1],p);a.href=s[3];a.target="_blank";a.rel="noopener"}
+  var ids=dayPlaces(d),ul=h("ul","tl",null,box),seenP={};
+  d.items.forEach(function(it){
+    var li=h("li",null,null,ul);h("time",null,it[0],li);
+    var b=h("div",null,null,li),t=h("div","ttl",null,b);
+    if(it[1]){li.setAttribute("data-place",it[1]);h("span","num",String(ids.indexOf(it[1])+1),t);
+      li.addEventListener("click",function(){setHot(it[1],false)})}
+    h("span",null,it[2],t);
+    if(it[3])h("p","note",it[3],b);
+    if(it[4])h("p","tip",it[4],b);
+    var pl=it[1],first=pl&&!seenP[pl];if(pl)seenP[pl]=1;
+    if(first){
+      var rk=(pl==="skaftafell"&&it[2].indexOf("Hik")===0)?"hike":pl,rt=RATE[rk],fk=FEEKEY[pl],fee=fk?FEE[fk]:null,pk=PARK[pl];
+      if(rt||fee||pk){
+        var mt=h("div","metas",null,b);
+        if(rt){var rs=h("span","rate",null,mt);h("span","star","★",rs);h("b",null,String(rt[0]).replace(".",","),rs);
+          var ra=h("a",null,"TripAdvisor, "+fmt(rt[1])+" opinii",rs);ra.href=rt[2];ra.target="_blank";ra.rel="noopener";
+          ra.addEventListener("click",function(e){e.stopPropagation()})}
+        if(fee)h("span","pill price",(fee.from?"od ":"ok. ")+fmt(r5(cvt(fee)))+" zł/os.",mt);
+        if(pk)h("span","pill","Parking ok. "+fmt(r5(pk*FX.ISK))+" zł/auto"+(pl==="jokulsarlon"?" (też Diamond Beach)":""),mt);
+      }}
+  });
+}
+function go(i){cur=i;hot=null;try{history.replaceState(null,"","#"+(i<0?"caly-plan":i===DAYS.length?"noclegi":i>DAYS.length?"koszty":DAYS[i].id))}catch(e){}render()}
+function render(){
+  document.querySelectorAll("#chips .chip").forEach(function(b,i){b.setAttribute("aria-selected",String(i-1===cur))});
+  var st=cur===DAYS.length,costs=cur===DAYS.length+1;
+  $("layout").hidden=st||costs;$("stays-view").hidden=!st;$("costs").hidden=!costs;
+  if(st){drawStays();return}
+  if(costs){drawCosts();return}
+  drawMap();drawDay();
+}
+var stBuilt=false;
+function drawStays(){
+  if(stBuilt)return;stBuilt=true;
+  var root=$("stays-view"),top=h("div","card",null,root);
+  h("h2",null,"Noclegi: Wasze wybory i alternatywy",top);
+  h("p",null,"Szukałem tańszych noclegów z co najmniej dwiema prywatnymi sypialniami. Cen na konkretne noce września 2027 nie udało mi się odczytać, bo Booking blokuje automatyczny odczyt, a inne serwisy pokazują ceny dopiero po wybraniu dat. Dlatego nie twierdzę, że któraś opcja jest tańsza. Przy każdej pozycji podaję, co znalazłem, a ceny „od” traktujcie jako orientacyjne (1 USD = 4,06 zł).",top);
+  var lst=h("ul","plain",null,top);
+  h("li",null,"Wasze wybory spełniające standard: Holiday Houses (8.09), Snæfellsjökull Apartments (6.09) i Aska Hraun (10.09).",lst);
+  h("li",null,"Największe luki: Höfn (łazienki wspólne), a w Reykjavíku 4.09 i Vík nie potwierdziłem układu pokoi.",lst);
+  h("li",null,"Sprawdźcie ceny na tych samych datach przyciskiem „Ceny na Booking” przy każdej nocy.",lst);
+  var g=h("div","grid2",null,root);g.style.marginTop="14px";
+  NIGHTS.forEach(function(n){
+    var c=h("div","card",null,g);
+    h("h3",null,n.d+" · "+n.town,c);
+    var o=h("div","opt",null,c);h("span","k","Wasz wybór",o);
+    var t=h("div",null,null,o);h("b",null,n.cur.n+" ",t);h("span","pill"+(n.cur.ok===1?" ok":n.cur.ok<0?" warn2":""),n.cur.t,t);
+    h("p","note",n.cur.f,o).style.color="var(--muted)";
+    n.alts.forEach(function(a){
+      var p=h("div","opt",null,c);h("span","k","Alternatywa",p);
+      var l=h("a",null,a.n,p);l.href=a.u;l.target="_blank";l.rel="noopener";l.style.fontWeight="600";
+      h("p","note",a.f,p).style.color="var(--muted)";
+      h("span","pill price",a.p,p).style.alignSelf="flex-start"});
+    if(n.note)h("p","tip",n.note,c);
+    var bl=h("a",null,"Ceny na Booking dla tych dat",c);bl.href=bks(n.town==="Snæfellsnes"?"Grundarfjörður":n.town,n.a,n.b);bl.target="_blank";bl.rel="noopener"});
+}
+var CK="islandia2027-costs",S={people:5,buf:0,katla:true,hike:true,boat:"zodiac",sky:true,blue:false,park:true,lodging:"",car:3500,cons:7,fp:274,food:"",other:""};
+try{var sv=JSON.parse(localStorage.getItem(CK)||"{}")||{};Object.keys(sv).forEach(function(k){if(k in S&&sv[k]!==""&&sv[k]!=null)S[k]=sv[k]})}catch(e){}
+function save(){try{localStorage.setItem(CK,JSON.stringify(S))}catch(e){}}
+function num(v){var n=parseFloat(String(v).replace(/\s/g,"").replace(",","."));return isFinite(n)&&n>0?n:0}
+var totalKm=0;DAYS.forEach(function(d){var m=String(d.km).replace(/\s/g,"").match(/\d+/);if(m)totalKm+=parseInt(m[0],10)});
+function fuelCalc(){var l=totalKm*num(S.cons)/100,isk=l*num(S.fp);return{l:l,isk:isk,pln:isk*FX.ISK}}
+var parkISK=0;Object.keys(PARK).forEach(function(k){parkISK+=PARK[k]});
+var costBuilt=false,refs={};
+function lineTotal(k){
+  var n=Math.max(1,num(S.people)||1);
+  if(k==="boat"){var f=S.boat==="zodiac"?FEE.zodiac:S.boat==="amphi"?FEE.amphi:null;return f?cvt(f)*n:0}
+  if(k==="park")return S.park?parkISK*FX.ISK:0;
+  return S[k]?cvt(FEE[k])*n:0}
+function updateCosts(){
+  var n=Math.max(1,num(S.people)||1),sub=0,other=0;
+  ["katla","hike","boat","sky","blue","park"].forEach(function(k){var t=lineTotal(k);sub+=t;refs[k].textContent=zl(t)+" zł"});
+  var withBuf=sub*(1+num(S.buf)/100);
+  ["lodging","car","food","other"].forEach(function(k){other+=num(S[k])});
+  var fc=fuelCalc();other+=fc.pln;
+  refs.fuelinfo.textContent=fmt(totalKm)+" km × "+String(num(S.cons)).replace(".",",")+" l/100 km = "+fmt(Math.round(fc.l))+" l × "+fmt(num(S.fp))+" ISK/l = "+fmt(Math.round(fc.isk))+" ISK ≈ "+zl(fc.pln)+" zł";
+  var tot=withBuf+other;
+  refs.sub.textContent=zl(withBuf)+" zł";refs.oth.textContent=zl(other)+" zł";refs.tot.textContent=zl(tot)+" zł";refs.pp.textContent=zl(tot/n)+" zł";
+}
+function field(parent,key,label,hint){var w=h("label","field",null,parent);w.appendChild(document.createTextNode(label));
+  var i=document.createElement("input");i.type="text";i.inputMode="decimal";i.id="c-"+key;i.value=S[key]===""?"":String(S[key]);if(hint)i.placeholder=hint;w.appendChild(i);
+  i.addEventListener("input",function(){S[key]=(key==="people"||key==="buf")?num(i.value):i.value;save();updateCosts()});return i}
+function drawCosts(){
+  if(costBuilt)return;costBuilt=true;
+  var root=$("costs"),c=h("div","card",null,root);
+  h("h2",null,"Podsumowanie kosztów",c);
+  h("p","prog","Kursy (Wise, 22.11.2026): 1 USD = 4,06 zł, 1 EUR = 4,40 zł, 100 ISK = 3,25 zł. Ceny pochodzą z lat 2025–2026, więc na wrzesień 2027 mogą być wyższe.",c);
+  var top=h("div","fields",null,c);field(top,"people","Liczba osób");field(top,"buf","Zapas na podwyżki cen atrakcji (%)","0");
+  var wrap=h("div",null,null,c);wrap.style.overflowX="auto";
+  var tb=h("table","tbl",null,wrap),hr=h("tr",null,null,h("thead",null,null,tb));
+  ["Atrakcja","Cena","Razem"].forEach(function(t){h("th",null,t,hr)});
+  var body=h("tbody",null,null,tb);
+  function row(k,label,priceText,ctrl){
+    var tr=h("tr",null,null,body),td=h("td",null,null,tr);
+    if(ctrl==="check"){var l=h("label",null,null,td),i=document.createElement("input");i.type="checkbox";i.id="c-"+k;i.checked=!!S[k];l.appendChild(i);h("span",null,label,l);
+      i.addEventListener("change",function(){S[k]=i.checked;save();updateCosts()})}
+    else{h("div",null,label,td).style.marginBottom="4px";var s=document.createElement("select");s.id="c-"+k;
+      [["zodiac","Zodiak"],["amphi","Amfibia"],["none","Bez rejsu"]].forEach(function(o){var op=document.createElement("option");op.value=o[0];op.textContent=o[1];s.appendChild(op)});
+      s.value=S.boat;td.appendChild(s);s.addEventListener("change",function(){S.boat=s.value;save();updateCosts()})}
+    h("td",null,priceText,tr);refs[k]=h("td",null,"",tr)}
+  function pe(f){return zl(cvt(f))+" zł/os. ("+fmt(f.amt)+" "+f.cur+")"}
+  row("katla","Jaskinia Katla, 8.09","od "+pe(FEE.katla),"check");
+  row("hike","Hik po lodowcu Skaftafell, 9.09","od "+pe(FEE.hike),"check");
+  row("boat","Rejs po lagunie Jökulsárlón, 9.09","Zodiak "+pe(FEE.zodiac)+", amfibia "+pe(FEE.amphi),"select");
+  row("sky","Sky Lagoon, 10.09",pe(FEE.sky),"check");
+  row("blue","Blue Lagoon, 11.09 (zamiast Sky Lagoon)","od "+pe(FEE.blue),"check");
+  row("park","Parkingi przy atrakcjach, jedno auto",zl(parkISK*FX.ISK)+" zł ("+fmt(parkISK)+" ISK)","check");
+  h("p","prog","Sky Lagoon: w 2026 operatorzy podają 12 990–13 990 ISK, tu liczę 14 990 ISK jak w Waszym planie. Skógafoss: opłatę za parking przyjąłem jak w pozostałych miejscach (1 000 ISK), do potwierdzenia. Gullfoss, Dyrhólaey, Djúpalónssandur i inne miejsca bez danych o opłatach nie są liczone.",c);
+  h("h3",null,"Pozostałe koszty (wpisz własne kwoty)",c).style.marginTop="8px";
+  h("p","prog","Auto: wstępnie 3 500 zł za cały wyjazd (kwota od Was, można zmienić). Paliwo liczy się samo: suma km z planu dni × spalanie × cena za litr (benzyna 95, średnia ze stacji na Islandii, fuel-prices.eu, 22.11.2026). Cen noclegów i jedzenia nie znalazłem w wiarygodnym źródle, więc wpisz je sami (kwoty dla całej grupy, w złotych).",c);
+  var f2=h("div","fields",null,c);
+  field(f2,"lodging","Noclegi, 7 nocy (zł)");field(f2,"car","Auto 7-os. z ubezpieczeniem (zł)");field(f2,"cons","Spalanie (l/100 km)");field(f2,"fp","Cena paliwa (ISK/l)");field(f2,"food","Jedzenie i zakupy (zł)");field(f2,"other","Inne (zł)");
+  var fi=h("p","prog",null,c);fi.appendChild(document.createTextNode("Paliwo: "));refs.fuelinfo=h("b",null,"",fi);
+  var sm=h("div","sum",null,c);
+  function srow(lbl,k,cls){var d=h("div",cls||null,null,sm);h("span",null,lbl,d);refs[k]=h("b",null,"",d)}
+  srow("Atrakcje i parkingi","sub");srow("Pozostałe koszty","oth");srow("Razem dla grupy","tot","big");srow("Na osobę","pp");
+  h("h3",null,"Źródła cen",c).style.marginTop="8px";
+  var src=h("ul","plain",null,c);src.style.fontSize="13px";
+  [["Katla: Guide to Iceland","https://guidetoiceland.is/travel-iceland/drive/katla-ice-cave"],["Hik na Skaftafell: Travelocity","https://www.travelocity.com/es/things-to-do/null.a533998.detalles-actividades"],["Zodiak: Arctic Adventures","https://adventures.is/iceland/day-tours/boat-tours/jokulsarlon-glacier-lagoon-zodiac-boat-tour/?gad_source=1"],["Amfibia: Guide to Iceland","https://guidetoiceland.is/book-holiday-trips/jokulsarlon-glacier-lagoon-amphibian-boat-tour"],["Sky Lagoon: Guide to Iceland","https://guidetoiceland.is/travel-iceland/drive/sky-lagoon"],["Blue Lagoon: cennik 2027","https://www.bluelagoon.com/travel-professionals/BL-ratecard2027"],["Paliwo: fuel-prices.eu (Gasvaktin, 22.11.2026)","https://www.fuel-prices.eu/live/iceland/"],["Parkingi: Rexby, dane z 2025","https://www.rexby.com/arontphotos/t/iceland-parking-and-entrance-fee-guide-updated-2025"]].forEach(function(s){var li=h("li",null,null,src),a=h("a",null,s[0],li);a.href=s[1];a.target="_blank";a.rel="noopener"});
+  updateCosts();
+}
+var chips=$("chips");
+function mk(label,sub,i){var b=h("button","chip",null,chips);b.setAttribute("role","tab");h("span",null,label,b);h("small",null,sub,b);b.addEventListener("click",function(){go(i)})}
+mk("Cała trasa","8 dni",-1);DAYS.forEach(function(d,i){mk(d.chip,d.sub,i)});mk("Noclegi","propozycje",DAYS.length);mk("Koszty","podsumowanie",DAYS.length+1);
+
+var st=$("stays");
+STAYS.forEach(function(s){var r=h("div","stay",null,st);h("span","d",s[0]+" · "+s[1],r);
+  var a=h("a",null,s[2],r);a.href=s[3];a.target="_blank";a.rel="noopener";a.style.fontWeight="600";h("span","note",s[4],r).style.color="var(--muted)"});
+
+var KEY="islandia2027-todo",saved={};
+try{saved=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){saved={}}
+function prog(){var n=0;TODO.forEach(function(t,i){if(saved[i])n++});$("prog").textContent="Zrobione: "+n+" z "+TODO.length;$("barfill").style.width=(100*n/TODO.length)+"%"}
+var ck=$("checks");
+TODO.forEach(function(t,i){
+  var r=h("div","check",null,ck),inp=document.createElement("input");inp.type="checkbox";inp.id="todo-"+i;inp.checked=!!saved[i];r.appendChild(inp);
+  var l=h("label",null,null,r);l.htmlFor=inp.id;h("b",null,t[0],l);h("small",null,t[1],l);
+  inp.addEventListener("change",function(){saved[i]=inp.checked;try{localStorage.setItem(KEY,JSON.stringify(saved))}catch(e){}prog()})});
+prog();
+
+function fromHash(){var x=(location.hash||"").slice(1),i=-1;DAYS.forEach(function(d,j){if(d.id===x)i=j});if(x==="noclegi")i=DAYS.length;if(x==="koszty")i=DAYS.length+1;cur=i;hot=null;render()}
+window.addEventListener("hashchange",fromHash);
+fromHash();
+})();
+</script>
+
+</body>
+</html>
