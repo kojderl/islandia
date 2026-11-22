@@ -102,6 +102,39 @@ footer{color:var(--muted);font-size:13px}
 .pill.warn2{color:var(--lava);border-color:var(--lava)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
+<style>
+.printbtn{align-self:flex-start;margin-top:6px;border:1px solid var(--accent);background:var(--surface);color:var(--accent);border-radius:999px;padding:7px 16px;font:inherit;font-weight:600;cursor:pointer}
+.printbtn:hover{background:var(--accent);color:var(--accent-ink)}
+#print-root{display:none}
+.pval{color:var(--fg);font-weight:600}
+@media print{
+  @page{size:A4;margin:12mm}
+  html:root:root{--bg:#FFFFFF;--surface:#FFFFFF;--fg:#13222A;--muted:#566A74;--line:#D5DEE2;--accent:#0A7487;--accent-ink:#FFFFFF;--lava:#B8481F;--land:#E1E9EC;--sea:#C9DDE6;--ok:#2E7D4F;color-scheme:light}
+  html,body{background:#fff!important}
+  body{padding:0!important;font-size:11px;line-height:1.4}
+  body>.wrap,.printbtn{display:none!important}
+  #print-root{display:block}
+  .pp{display:flex;flex-direction:column;gap:12px;break-before:page;page-break-before:always}
+  .pp:first-child{break-before:auto;page-break-before:auto}
+  .pp header{gap:6px}
+  .pmap{display:block;width:100%;height:64mm;border:1px solid var(--line);border-radius:8px}
+  .tl li,.card,.opt,.check,.stay,.tbl tr{break-inside:avoid;page-break-inside:avoid}
+  .tl li.hot{background:none}
+  .grid2{grid-template-columns:1fr 1fr}
+  a{color:inherit;text-decoration:none}
+  h2{font-size:17px}
+  h1{font-size:34px}
+  .tl li{padding:6px 0}
+  .tl .note,.tl .tip,.rate{font-size:11px}
+  .card{padding:10px;gap:8px}
+  .stay{padding-top:6px}
+  .pp{gap:10px}
+  .tbl th,.tbl td{padding:5px 8px}
+  ul.plain{gap:2px}
+  .sum{gap:3px}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -114,6 +147,7 @@ footer{color:var(--muted);font-size:13px}
     <span>Przylot <b>sob. 18:00</b></span>
     <span>Wylot <b>sob. 18:50</b></span>
   </div>
+<button class="printbtn" id="printbtn" type="button">Drukuj całość (PDF)</button>
 </header>
 
 <nav aria-label="Wybór dnia"><div class="chips" id="chips" role="tablist"></div></nav>
@@ -539,11 +573,59 @@ TODO.forEach(function(t,i){
   inp.addEventListener("change",function(){saved[i]=inp.checked;try{localStorage.setItem(KEY,JSON.stringify(saved))}catch(e){}prog()})});
 prog();
 
+
+function cloneClean(n){var c=n.cloneNode(true);c.removeAttribute("id");c.removeAttribute("aria-live");c.hidden=false;
+  Array.prototype.forEach.call(c.querySelectorAll("[id]"),function(e){e.removeAttribute("id")});
+  Array.prototype.forEach.call(c.querySelectorAll("label[for]"),function(e){e.removeAttribute("for")});return c}
+function staticControls(orig,clone){
+  var oi=orig.querySelectorAll("input,select"),ci=clone.querySelectorAll("input,select");
+  for(var j=0;j<ci.length;j++){var o=oi[j],t;
+    if(o.type==="checkbox")t=o.checked?"☑":"☐";
+    else if(o.tagName==="SELECT")t=o.options[o.selectedIndex]?o.options[o.selectedIndex].text:"";
+    else t=o.value===""?"—":o.value;
+    ci[j].parentNode.replaceChild(h("b","pval",t),ci[j])}}
+function buildPrint(){
+  var old=$("print-root");if(old)old.parentNode.removeChild(old);
+  var root=h("div",null,null,document.body);root.id="print-root";
+  var c0=cur,h0=hot;
+  function page(){return h("section","pp",null,root)}
+  function mapClone(){var s=$("map").cloneNode(true);s.removeAttribute("id");s.setAttribute("class","pmap");return s}
+  // strona tytulowa
+  var p=page(),hd=cloneClean(document.querySelector("header"));
+  var pb=hd.querySelector(".printbtn");if(pb)pb.parentNode.removeChild(pb);
+  p.appendChild(hd);
+  cur=-1;hot=null;drawMap();p.appendChild(mapClone());
+  h("h2",null,"Plan w skrócie",p);
+  var tb=h("table","tbl",null,p),th=h("tr",null,null,h("thead",null,null,tb));
+  ["Dzień","Trasa","Dystans","Jazda"].forEach(function(t){h("th",null,t,th)});
+  var tbd=h("tbody",null,null,tb);
+  DAYS.forEach(function(d){var tr=h("tr",null,null,tbd);h("td",null,d.chip,tr);h("td",null,d.title,tr);h("td",null,d.km,tr);h("td",null,d.drive,tr)});
+  // dni
+  DAYS.forEach(function(d,i){
+    cur=i;hot=null;drawMap();drawDay();
+    var pg=page();pg.appendChild(mapClone());pg.appendChild(cloneClean($("day")))});
+  // noclegi
+  drawStays();var ps=page();ps.appendChild(cloneClean($("stays-view")));
+  // koszty
+  drawCosts();updateCosts();var pc=page(),cc=cloneClean($("costs"));staticControls($("costs"),cc);pc.appendChild(cc);
+  // lista i wskazowki
+  var g=document.querySelector("section.grid2"),pl=page(),gc=cloneClean(g);
+  staticControls(g,gc);pl.appendChild(gc);
+  cur=c0;hot=h0;if(c0>=0&&c0<DAYS.length){drawMap();drawDay()}else if(c0<0){drawMap();drawDay()}
+}
+window.__islandiaBuildPrint=buildPrint;
+
 function fromHash(){var x=(location.hash||"").slice(1),i=-1;DAYS.forEach(function(d,j){if(d.id===x)i=j});if(x==="noclegi")i=DAYS.length;if(x==="koszty")i=DAYS.length+1;cur=i;hot=null;render()}
 window.addEventListener("hashchange",fromHash);
 fromHash();
 })();
 </script>
-
+<script>
+(function(){var b=document.getElementById("printbtn");
+if(b)b.addEventListener("click",function(){window.__islandiaBuildPrint();window.print()});
+window.addEventListener("beforeprint",function(){window.__islandiaBuildPrint()});
+window.addEventListener("afterprint",function(){var r=document.getElementById("print-root");if(r)r.parentNode.removeChild(r)});
+})();
+</script>
 </body>
 </html>
