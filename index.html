@@ -100,6 +100,16 @@ footer{color:var(--muted);font-size:13px}
 .opt .k{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .pill.ok{color:var(--ok);border-color:var(--ok)}
 .pill.warn2{color:var(--lava);border-color:var(--lava)}
+.mealico{width:18px;height:18px;flex:0 0 auto;fill:none;stroke:var(--lava);stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:inline-block;vertical-align:-3px}
+.tl .ttl .mealico{align-self:center;vertical-align:baseline}
+.meals h3{display:flex;gap:8px;align-items:center}
+.meals .tbl td{font-size:14px}
+.meals .tbl td:last-child{min-width:104px}
+.meals .m{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.meals .sub{display:block;color:var(--muted);font-size:12px;font-weight:500}
+.meals .rt{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.meals .tag{display:inline-block;font-size:11px;font-weight:600;border:1px solid var(--line);border-radius:999px;padding:1px 8px;color:var(--muted);margin-top:3px}
+.meals .tag.ok{color:var(--ok);border-color:var(--ok)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 <style>
@@ -155,13 +165,14 @@ footer{color:var(--muted);font-size:13px}
 <div class="layout" id="layout">
   <div class="mapcol">
     <div class="mapwrap"><svg id="map" viewBox="0 0 820 585" role="img" aria-label="Schematyczna mapa trasy po Islandii"></svg></div>
-    <p class="maplegend">Mapa schematyczna (zarys wyspy uproszczony, pozycje noclegów orientacyjne). Kwadraty to noclegi (7 jeszcze do rezerwacji), kropki to przystanki. Kliknij punkt na mapie albo pozycję na liście, żeby go podświetlić.</p>
+    <p class="maplegend">Mapa schematyczna (zarys wyspy uproszczony, pozycje noclegów orientacyjne). Domki to noclegi (7 jeszcze do rezerwacji), kropki to przystanki. Kliknij punkt na mapie albo pozycję na liście, żeby go podświetlić.</p>
   </div>
   <section class="daycol" id="day" aria-live="polite"></section>
 </div>
 <section id="costs" hidden></section>
 <section id="stays-view" hidden></section>
 
+<div id="home-extra" style="display:flex;flex-direction:column;gap:28px">
 <section class="wrap" style="gap:14px">
   <h2>Noclegi</h2>
   <div class="card" id="stays"></div>
@@ -188,6 +199,7 @@ footer{color:var(--muted);font-size:13px}
     </ul>
   </div>
 </section>
+</div>
 <footer>Czasy i odległości są orientacyjne. Oceny: TripAdvisor, stan na 22.11.2026. Ceny z lat 2025–2026 przeliczone po kursach Wise z 22.11.2026. Przed rezerwacją sprawdźcie aktualne ceny i godziny u operatorów.</footer>
 </div>
 <script>
@@ -274,68 +286,125 @@ const DAYS=[
 {id:"dzien-1",chip:"Sob 4.09",sub:"Przylot",title:"Przylot i dojazd do Hafnarfjörður",stay:0,km:"ok. 40 km",drive:"ok. 45 min",tags:["lot 18:00"],items:[
 ["18:00","kef","Lądowanie w Keflavíku","Alkohol najtaniej kupicie w sklepie bezcłowym na lotnisku, zaraz po odprawie."],
 ["19:00","kef","Odbiór samochodu","Auto 7-miejscowe. Zróbcie zdjęcia stanu przed wyjazdem."],
-["20:00",null,"Zakupy w markecie","Śniadanie i prowiant na jutrzejszy Złoty Krąg. Sprawdźcie godziny sklepów, bo wieczorem nie wszystkie są czynne.","Nie planujcie Blue Lagoon na ten wieczór."],
+["20:00",null,"Kolacja i zakupy w markecie","Hot dogi lub coś gotowego z marketu na kolację, do tego śniadanie i prowiant na jutrzejszy Złoty Krąg. Sprawdźcie godziny sklepów, bo wieczorem nie wszystkie są czynne.","Nie planujcie Blue Lagoon na ten wieczór.",1],
 ["21:00","aska","Aska Hraun, Hafnarfjörður","Dalshraun 15, ok. 40 km od lotniska. Apartamenty z dwiema sypialniami. Odpoczynek, jutro start o 8:00.","Zapytajcie obiekt o samodzielne zameldowanie, bo dojedziecie po 21:00."]]},
 {id:"dzien-2",chip:"Nie 5.09",sub:"Złoty Krąg",title:"Złoty Krąg w pętli i nocleg w Laxarbakki",stay:1,km:"ok. 290 km",drive:"ok. 4,5 h",tags:["pętla bez cofania"],items:[
 ["08:00","aska","Wyjazd z Hafnarfjörður","Przez Hveragerði i Selfoss drogą 35 do Gullfoss, ok. 2 h. Zaczynacie od najdalszego punktu, żeby nie wracać tą samą drogą."],
 ["10:00","gullfoss","Gullfoss","Dwa tarasy widokowe, dolny jest bliżej wody. Rano jest mniej ludzi."],
-["11:30","geysir","Geysir i Strokkur","Strokkur wybucha co kilka minut. Obiad możecie zjeść tutaj."],
+["11:30","geysir","Geysir i Strokkur, obiad","Strokkur wybucha co kilka minut. Obiad zjecie na miejscu albo w Efstidalur II po drodze do Þingvellir.","",1],
 ["13:30","thingvellir","Þingvellir","Dojazd przez Laugarvatn drogą 37 i 365, ok. godziny. Rozpadlina między płytami tektonicznymi i szlak do Öxarárfoss. Parking jest płatny."],
 ["16:00","laxar","Hotel Laxarbakki","Od Þingvellir drogą 36 do Mosfellsbær, potem drogą nr 1 przez tunel Hvalfjörður, ok. 1 h 45 min. Dwa pokoje z łazienkami, jacuzzi i sauna.","Dojedziecie bez zjazdu do Borgarnes i bez szutrowej drogi Uxahryggir."],
-["19:00","laxar","Kolacja w hotelowej restauracji","Domowe dania i grill. Potem jacuzzi, sauna i łaźnia parowa. Zorza jest możliwa, ale nie planujcie pod nią dnia. Prognoza: vedur.is."]]},
+["19:00","laxar","Kolacja w hotelowej restauracji","Domowe dania i grill. Potem jacuzzi, sauna i łaźnia parowa. Zorza jest możliwa, ale nie planujcie pod nią dnia. Prognoza: vedur.is.","",1]]},
 {id:"dzien-3",chip:"Pon 6.09",sub:"Snæfellsnes",title:"Południowe wybrzeże Snæfellsnes i nocleg w Gufuskálar",stay:2,km:"ok. 170 km",drive:"ok. 3 h",tags:["bez cofania"],items:[
-["08:30","laxar","Wyjazd z Laxarbakki","Drogą nr 1 na północ, ok. 20 minut do Borgarnes. Śniadanie w hotelu jest dodatkowo płatne."],
+["08:30","laxar","Śniadanie i wyjazd z Laxarbakki","Drogą nr 1 na północ, ok. 20 minut do Borgarnes. Śniadanie w hotelu jest dodatkowo płatne, a tańsze będzie z zapasów z marketu.","",1],
 ["08:50","borgarnes","Borgarnes: zakupy i tankowanie","To ostatni duży sklep przed apartamentem w Gufuskálar, a tam jest kuchnia. Kupcie jedzenie na kolację i śniadanie. Sprawdźcie godziny sklepów.","Tankujcie do pełna, dalej stacji jest mało."],
 ["10:30","budir","Búðakirkja","Drogą 54 ok. 1 h 15 min z Borgarnes. Czarny drewniany kościółek na polu lawowym."],
-["11:30","arnarstapi","Arnarstapi i Hellnar","Spacer klifami między wioskami, ok. 2,5 km."],
+["11:30","arnarstapi","Arnarstapi i Hellnar, obiad","Spacer klifami między wioskami, ok. 2,5 km. Obiad w Hellnar albo w Arnarstapi.","",1],
 ["13:30","londrangar","Lóndrangar","Bazaltowe iglice widoczne z parkingu i ścieżki."],
 ["14:15","djupalon","Djúpalónssandur","Czarna plaża z kamieniami do podnoszenia. Krótki szutrowy dojazd."],
 ["16:00","snaef","Snæfellsjökull Apartments, Gufuskálar","Cały apartament dla Was. Klucze w skrytce, kod przychodzi mailem, więc sprawdźcie skrzynkę dzień wcześniej. W pobliżu plaża Skarðsvík i latarnia na Öndverðarnes.","Dobry punkt na zorzę: zachód i ciemne niebo. Zachód słońca ok. 20:15."],
+["19:00","snaef","Kolacja w apartamencie","Gotujecie z zakupów z Borgarnes. Kuchnia jest w apartamencie.","",1],
 ["21:30","snaef","Niebo wieczorem","Prognoza zorzy: vedur.is."]]},
 {id:"dzien-4",chip:"Wto 7.09",sub:"Na południe",title:"Kirkjufell i przejazd na południe do The Barn",stay:3,km:"ok. 400 km",drive:"ok. 6 h",tags:["długi dzień"],items:[
 ["08:00","snaef","Wyjazd z Gufuskálar","Drogą 54 północnym brzegiem półwyspu, ok. 55 minut do Kirkjufell. Dzięki temu nie wracacie na południowy brzeg."],
 ["09:00","kirkjufell","Kirkjufell i Kirkjufellsfoss","Rano jest mniej ludzi niż wieczorem. Parking jest płatny."],
 ["10:15",null,"Przejazd do Borgarnes","Drogą 56 (Vatnaleið) i 54, ok. 1 h 20 min."],
-["11:30","borgarnes","Obiad w Borgarnes","Ostatni dobry przystanek przed Reykjavíkiem."],
+["11:30","borgarnes","Obiad w Borgarnes","Ostatni dobry przystanek przed Reykjavíkiem.","",1],
 ["12:30",null,"Tunel Hvalfjörður i obwodnica Reykjavíku","Ok. 1,5 h do Hveragerði. Nie zjeżdżajcie do centrum, chyba że potrzebujecie."],
 ["14:00",null,"Zakupy w Selfoss lub Hveragerði","The Barn i Holiday Houses mają kuchnie. Kupcie jedzenie na dwa dni.","Hostel jest ok. 7 km od Vík, sklep będzie daleko."],
 ["15:45","seljalandsfoss","Seljalandsfoss","Można przejść za kurtyną wody. Weźcie kurtki."],
 ["16:45","skogafoss","Skógafoss","Schody na szczyt dają widok na rzekę."],
 ["18:00","barn","The Barn","Hostel ok. 7 km od Vík (Norður Foss): wspólne łazienki i kuchnia, zameldowanie 15:00–23:30."],
-["19:00","reynisfjara","Reynisfjara","Czarna plaża i słupy bazaltowe, ok. 4 km od hostelu. Zachód słońca ok. 20:15.","Nie podchodźcie do wody. Fale wciągają ludzi bez ostrzeżenia."]]},
+["19:00","reynisfjara","Reynisfjara","Czarna plaża i słupy bazaltowe, ok. 4 km od hostelu. Zachód słońca ok. 20:15.","Nie podchodźcie do wody. Fale wciągają ludzi bez ostrzeżenia."],
+["20:45",null,"Kolacja w The Barn","Wspólna kuchnia, zakupy z Selfoss lub Hveragerði. Restauracje w Vík zamykają kuchnię ok. 21:00, więc po zachodzie słońca zdążycie tylko z szybkim zamówieniem.","",1]]},
 {id:"dzien-5",chip:"Śro 8.09",sub:"Katla",title:"Jaskinia lodowa Katla i wschód",stay:4,km:"ok. 120 km",drive:"ok. 2 h",tags:["wycieczka","Katla"],items:[
-["08:00","barn","Śniadanie w The Barn","Wspólna kuchnia. Do Vík ok. 10 minut."],
+["08:00","barn","Śniadanie w The Barn","Wspólna kuchnia. Do Vík ok. 10 minut.","",1],
 ["08:45","vik","Zbiórka na Katlę w Vík","Zwykle przy Austurvegur, 15 min przed startem."],
 ["09:00","katla","Jaskinia Katla","Wycieczka super jeepem, ok. 3 h. Buty za kostkę. Godzinę ustawcie przy rezerwacji.","Tylko z licencjonowanym przewodnikiem."],
-["12:30","vik","Obiad w Vík","Zapas na przesunięcie wycieczki."],
+["12:30","vik","Obiad w Vík","Zapas na przesunięcie wycieczki.","",1],
 ["13:30","dyrholaey","Dyrhólaey","Klify i latarnia, ok. 20 min od Vík. Jeśli wczoraj Reynisfjara nie wyszła, nadróbcie ją tu."],
 ["15:30","eldhraun","Eldhraun","Pole lawowe pokryte mchem, postój przy drodze."],
 ["16:45","fjadra","Fjaðrárgljúfur","Wąski kanion, krótki spacer wzdłuż krawędzi."],
-["18:00","klaustur","Kirkjubæjarklaustur","Zakupy i kolacja w miasteczku."],
+["18:00","klaustur","Kirkjubæjarklaustur: kolacja i zakupy","Kolacja w miasteczku albo w domu z zakupów. Zróbcie też zakupy na jutrzejszy wczesny wyjazd.","",1],
 ["19:00","holiday","The Holiday Houses","Dom z 3 sypialniami i kuchnią, 2 km od centrum. Jutro wcześnie rano hik w Skaftafell."]]},
 {id:"dzien-6",chip:"Czw 9.09",sub:"Lodowiec",title:"Lodowiec, Jökulsárlón i Diamond Beach",stay:5,km:"ok. 210 km",drive:"ok. 3 h",tags:["hik 3–3,5 h","Zodiac"],items:[
 ["07:45","holiday","Wyjazd na Skaftafell","Ok. godziny jazdy. Zbiórkę ustawcie przy rezerwacji."],
 ["09:30","skaftafell","Hik po lodowcu Vatnajökull","Wybierzcie wersję 3–3,5 h. Raki, kask i czekan dostaniecie na miejscu.","Wersja 5-godzinna nie zmieści się z Zodiakiem."],
-["13:15",null,"Szybki obiad","W Skaftafell lub po drodze."],
+["13:15",null,"Szybki obiad","W Skaftafell lub po drodze.","",1],
 ["14:00",null,"Przejazd do Jökulsárlón","Ok. godziny jazdy."],
 ["15:30","jokulsarlon","Rejs Zodiakiem","Rezerwacja na stałą godzinę. Tańsza amfibia to dobra alternatywa."],
 ["17:30","diamond","Diamond Beach","Bryły lodu na czarnym piasku. Bierzcie ciepłe rzeczy, wieje."],
-["18:45","hofnG","Höfn Guesthouse","Zameldowanie 16:00–20:00, więc nie spóźnijcie się. Obiekt nie ma kuchni, więc kolacja w mieście.","Jeśli wyjdzie później niż 20:00, uprzedźcie obiekt."]]},
+["18:45","hofnG","Höfn Guesthouse","Zameldowanie 16:00–20:00, więc nie spóźnijcie się. Obiekt nie ma kuchni, więc kolacja w mieście.","Jeśli wyjdzie później niż 20:00, uprzedźcie obiekt."],
+["19:30",null,"Kolacja w Höfn","Restauracje w Höfn zamykają kuchnię ok. 21:00. Kupcie też coś na jutrzejsze śniadanie, bo obiekt nie ma kuchni.","",1]]},
 {id:"dzien-7",chip:"Pią 10.09",sub:"Powrót",title:"Długi powrót do Reykjavíku",stay:6,km:"ok. 500 km",drive:"ok. 6,5 h",tags:["Sky Lagoon"],items:[
-["07:30","hofnG","Wyjazd z Höfn","Najdłuższy przejazd wyprawy."],
+["07:30","hofnG","Śniadanie z zapasów i wyjazd z Höfn","Najdłuższy przejazd wyprawy. Obiekt nie ma kuchni, więc śniadanie kupcie poprzedniego wieczoru (skyr, chleb, owoce).","",1],
 ["08:00","vestrahorn","Vestrahorn i Stokksnes (opcjonalnie)","Ok. 20 minut od Höfn, razem z powrotem ok. godziny. Wjazd i parking są płatne, sprawdźcie na miejscu.","Jeśli pada lub wieje mocno, pomińcie."],
-["12:30","vik","Obiad w Vík","Ostatni dłuższy przystanek."],
-["15:30",null,"Kawa po drodze","Selfoss lub Hveragerði."],
+["12:30","vik","Obiad w Vík","Ostatni dłuższy przystanek.","",1],
+["15:30",null,"Kawa i przekąska po drodze","Selfoss lub Hveragerði.","",1],
 ["17:30","rvk","Reykjavík: zameldowanie","Nocleg na tę noc jest jeszcze do zarezerwowania.","Sprawdźcie parking przy obiekcie."],
+["18:15",null,"Kolacja w centrum Reykjavíku","Przed Sky Lagoon. Dobre i niedrogie miejsca są blisko siebie na Laugavegur i przy Hlemmur.","",1],
 ["19:30","skylagoon","Sky Lagoon (opcjonalnie)","Jesienią czynne do 22:00. Możecie też zostawić wieczór na kolację w mieście.","Blue Lagoon zróbcie jutro rano zamiast Sky Lagoon, nie obie."]]},
 {id:"dzien-8",chip:"Sob 11.09",sub:"Wylot",title:"Wylot",stay:-1,km:"ok. 70 km",drive:"ok. 1,2 h",tags:["lot 18:50"],items:[
-["08:30","rvk","Śniadanie i wymeldowanie","Spakowane auto, zapas na korki."],
+["08:30","rvk","Śniadanie i wymeldowanie","Spakowane auto, zapas na korki.","",1],
 ["10:30","bluelagoon","Blue Lagoon (opcjonalnie)","25 min od lotniska. Wymaga rezerwacji i sprawdzenia drogi.","Alternatywa: Reykjanes (Gunnuhver, Most między kontynentami)."],
+["12:30",null,"Obiad przed lotniskiem","Tanio i szybko, bo na lotnisku jest drożej.","",1],
 ["13:30",null,"Tankowanie","Zwrot auta zwykle z pełnym bakiem."],
 ["14:30","kef","Zwrot samochodu","Zostawcie zapas na formalności."],
 ["15:45","kef","Odprawa","Wylot 18:50."]]}];
+
+/* Gdzie zjeść: m = posiłek, n = lokal, u = link, d = co zamówić, lo/hi = cena za osobę w ISK (jedno danie, bez napojów), s = źródło ceny, r = opinie/godziny */
+const SRC={w:"menu ze strony lokalu",m:"menu z Google Maps",g:"przedział Google Maps",c:"cennik",k:"cennik sklepu",s:"szacunek"};
+const U={price:"https://guidetoiceland.is/travel-info/food-prices-in-iceland",isnet:"https://isnet.is/guides/where-to-eat-in-reykjavik-food-halls-fine-dining",vik:"https://guidetoiceland.is/best-of-iceland/best-restaurants-in-vik",south:"https://guidetoiceland.is/best-of-iceland/best-restaurants-on-the-south-coast",gc:"https://guidetoiceland.is/best-of-iceland/best-places-to-eat-on-the-golden-circle"};
+const GM=q=>"https://www.google.com/maps/search/"+encodeURIComponent(q);
+const MEALS={
+"dzien-1":[
+{m:"Kolacja",n:"Hot dogi z marketu (Krónan, Bónus)",u:U.price,d:"Paczka 10 hot dogów kosztuje ok. 1 140 ISK, dwa opakowania bułek ok. 590 ISK. Dla 5 osób po 2 sztuki. Zjecie w apartamencie.",lo:300,hi:500,s:"k"},
+{m:"Kolacja",n:"Von Mathús, Hafnarfjörður",u:GM("Von Mathús Hafnarfjörður"),d:"Droższa opcja na porządną kolację przy starym porcie (Strandgata 75). W sobotę kuchnia do 21:30. Zdążycie, jeśli zakupy zrobicie rano i uprzedzicie Aska Hraun o późniejszym przyjeździe.",lo:4000,hi:10000,s:"g",r:"Google 4,8 (241 opinii)"}],
+"dzien-2":[
+{m:"Śniadanie",n:"Z zapasów z marketu",u:U.price,d:"Skyr ok. 505 ISK za 500 g, chleb ok. 575 ISK, jajka ok. 900 ISK za 12 szt.",lo:400,hi:600,s:"k"},
+{m:"Obiad",n:"Efstidalur II (Barnloft), przy drodze 37",u:GM("Efstidalur II restaurant"),d:"Farma po drodze z Geysiru do Þingvellir. Bufet zupy 2 990 ISK, bruschetta 2 750 ISK, farmer's fries 2 700 ISK, burgery z frytkami 3 190–3 650 ISK, m.in. skyr burger i Icelander.",lo:2700,hi:3650,s:"m",r:"Google 4,6 (2 671 opinii)"},
+{m:"Obiad",n:"Geysir Glíma, naprzeciw gejzerów",u:GM("Geysir Glima restaurant Haukadalur"),d:"Samoobsługowa kawiarnia: sałatki 2 280 ISK, kanapka z jagnięciną i sałatką 2 480 ISK, pizza margherita 2 890 ISK, fish and chips 3 880 ISK, frytki 1 180 ISK. Zupy (rybna, mięsna, pomidorowa) bez ceny na zdjęciu.",lo:2280,hi:3880,s:"m",r:"Google 4,2 (1 325 opinii), czynne od 9:15"},
+{m:"Kolacja",n:"Hotel Laxarbakki, restauracja",u:GM("Laxárbakki restaurant"),d:"Menu ze zdjęcia z maja 2023, więc dziś zapewne drożej: zupa mięsna z chlebem 2 600 ISK, plokkfiskur 3 100 ISK, cheeseburger z frytkami 2 900 ISK, danie dnia (ryba) 4 200 ISK, wegetariańskie 2 600 ISK. Otwiera się o 16:00. Zadzwońcie wcześniej: +354 551 2783.",lo:2600,hi:4200,s:"m",r:"Google 4,7 (52 opinii)"}],
+"dzien-3":[
+{m:"Śniadanie",n:"Z zapasów z marketu",u:U.price,d:"Hotelowe śniadanie kosztuje 3 000 ISK według menu z 2023, więc taniej wyjdą zapasy: skyr, chleb, jajka.",lo:400,hi:600,s:"k"},
+{m:"Obiad",n:"Fjöruhúsið, Hellnar",u:GM("Fjöruhúsið Hellnar"),d:"Kawiarnia nad morzem. Zupa rybna 4 300 ISK, domowy chleb z szynką i serem lub wędzonym łososiem 3 100 ISK, quiche 4 500–4 700 ISK, gofr 1 450 ISK, kawa 700 ISK. W listopadzie jest zamknięta, bo działa sezonowo, więc przed wyjazdem sprawdźcie godziny na wrzesień 2027.",lo:3100,hi:4700,s:"m",r:"Google 4,6 (622 opinii), TA 4,0"},
+{m:"Obiad",n:"Piknik z zapasów",u:U.price,d:"Chleb, ser, szynka z Borgarnes. W Arnarstapi goście opisywali zamknięte lokale i kolejki, więc warto mieć plan B.",lo:600,hi:900,s:"k"},
+{m:"Kolacja",n:"Gotowanie w apartamencie",u:U.price,d:"Makaron ok. 450 ISK/kg, pierś z kurczaka ok. 2 770 ISK/kg, ziemniaki ok. 600 ISK/kg. Kolacja dla 5 osób to ok. 4 500 ISK. Zakupy w Borgarnes.",lo:800,hi:1200,s:"k"}],
+"dzien-4":[
+{m:"Śniadanie",n:"Z zapasów z Borgarnes",u:U.price,d:"Apartament ma kuchnię. Jajka, chleb, skyr.",lo:400,hi:600,s:"k"},
+{m:"Obiad",n:"Landnámssetur (Settlement Centre), Borgarnes",u:"https://www.landnam.is/restaurant/",d:"Menu 2026: bufet „Hollustu” 11:30–15:00 za 3 900 ISK, zupa dnia z chlebem 2 800 ISK, większa porcja 3 800 ISK, zupa rybna 2 800/3 800 ISK, burger wołowy 3 900 ISK, plokkfiskur 4 200 ISK.",lo:2800,hi:4200,s:"w",r:"restauracja czynna do końca października"},
+{m:"Obiad",n:"Geirabakarí Kaffihús, Borgarnes",u:GM("Geirabakarí Kaffihús Borgarnes"),d:"Piekarnia z kawiarnią przy głównej drodze: kanapki, wypieki, kawa, cappuccino 760 ISK. Tańsza opcja, gdy nie chcecie siadać do pełnego obiadu. Cen kanapek nie widziałem, więc to przedział z Google.",lo:2000,hi:4000,s:"g",r:"Google 4,4 (815 opinii), od 7:30"},
+{m:"Kolacja",n:"Gotowanie w The Barn",u:U.price,d:"Wspólna kuchnia. Zakupy z Selfoss lub Hveragerði: makaron z kurczakiem albo hot dogi, 10 szt. ok. 1 140 ISK.",lo:800,hi:1200,s:"k"},
+{m:"Kolacja",n:"Black Crust Pizzeria, Vík",u:GM("Black Crust Pizzeria Vík"),d:"Pizze 12″ na czarnym cieście 4 190–4 590 ISK (najdroższe z langustynkami i kaczką), na zakwasie 3 590–3 990 ISK. Czynne od 12:00 do ok. 21:00, więc po Reynisfjara zdążycie tylko przy szybkim zamówieniu.",lo:3590,hi:4590,s:"m",r:"Google 4,7 (4 227 opinii)"}],
+"dzien-5":[
+{m:"Śniadanie",n:"Z zapasów w The Barn",u:U.price,d:"Wspólna kuchnia. Zapas z Selfoss lub Hveragerði.",lo:400,hi:600,s:"k"},
+{m:"Obiad",n:"The Soup Company, Vík",u:GM("The Soup Company Vík"),d:"Zupy po 2 990 ISK: islandzka jagnięca, rybna curry, brokułowa, soczewicowa, z dolewką i możliwością spróbowania innej. Panini 2 690 ISK, sałatki 3 990 ISK. Zupa w chlebie wg opinii mniej smaczna, bo chleb wchłania zupę.",lo:2690,hi:3990,s:"m",r:"Google 4,7 (3 506 opinii)"},
+{m:"Obiad",n:"Smiðjan Brugghús, Vík",u:GM("Smiðjan Brugghús Vík"),d:"Burgery 2 990–3 190 ISK, frytki osobno ok. 1 590 ISK, skrzydełka 1 890–1 990 ISK, pulled pork sandwich 3 190 ISK. Zamawia się z telefonu, kuchnia do 22:00.",lo:2990,hi:4800,s:"m",r:"Google 4,7 (2 341 opinii)"},
+{m:"Kolacja",n:"Systrakaffi, Kirkjubæjarklaustur",u:GM("Systrakaffi Kirkjubæjarklaustur"),d:"Zupa z batatów 2 190 ISK, Systra-burger 3 700 ISK, lamb „cheese steak” 3 950 ISK, makaron z tortellini 3 950 ISK, fish and chips 4 650 ISK, golec 5 650 ISK, polędwica jagnięca 6 850 ISK. Są też pizze.",lo:3700,hi:6850,s:"m",r:"Google 4,5 (1 894 opinii), 12:00–22:00"},
+{m:"Kolacja",n:"Skaftárskáli, Kirkjubæjarklaustur",u:GM("Skaftárskáli Kirkjubæjarklaustur"),d:"Stacja z jedzeniem: hot dogi, burgery (m.in. fish burger), fish and chips, małe dania 1 295–1 695 ISK wg menu z 2024. Najtaniej, gdy nie chce Wam się gotować.",lo:2000,hi:4000,s:"g",r:"Google 4,2 (226 opinii)"}],
+"dzien-6":[
+{m:"Śniadanie",n:"Z zapasów w Holiday Houses",u:U.price,d:"Jedzcie sycąco, bo hik trwa 3–3,5 h. Zapakujcie kanapki na po hiku.",lo:400,hi:600,s:"k"},
+{m:"Obiad",n:"Freysnes, tuż za Skaftafell",u:GM("Freysnes restaurant Hof"),d:"Przydrożna restauracja z grillem: burgery z frytkami i napojem 2 890–3 390 ISK: jagnięcy, wołowy, kurczak, wegański, fish and chips, golonka jagnięca. Opinie chwalą stosunek ceny do jakości, w porze lunchu bywa kolejka (czekanie 10–25 min). Czynne od 9:00.",lo:2890,hi:3390,s:"m",r:"Google 4,2 (1 222 opinii)"},
+{m:"Obiad",n:"Glacier Goodies, Skaftafell",u:GM("Glacier Goodies Skaftafell"),d:"Food truck przy centrum odwiedzających: zupa z langustynek 2 700 ISK, fish and chips 3 100 ISK, żeberka z frytkami 3 400 ISK. Wg opinii porcje duże. Zamyka się wcześnie po południu.",lo:2700,hi:3400,s:"m",r:"Google 4,0 (129 opinii)"},
+{m:"Przekąska",n:"Fancy Sheep, Jökulsárlón",u:GM("Fancy Sheep Jökulsárlón"),d:"Food truck na parkingu: zupa dyniowa 1 500 ISK, burger wołowy lub wegetariański z frytkami 2 900 ISK, burger jagnięcy 3 300 ISK, frytki 950 ISK. Czynne ok. 11:30–17:00, więc najlepiej przed rejsem.",lo:1500,hi:3300,s:"m",r:"Google 4,8 (369 opinii)"},
+{m:"Kolacja",n:"Hafnarbúðin, Höfn",u:GM("Hafnarbúðin Höfn"),d:"Budżetowy bar przy porcie, zamawia się przy ladzie. Smash burger 1 990 ISK, z frytkami 2 690 ISK, bułka z langustynkami 2 990 ISK, fish n' chips 3 250 ISK, hot dog 750 ISK, frytki 850/1 390 ISK. Najtańsza kolacja w mieście.",lo:2690,hi:3250,s:"m",r:"Google 4,7 (2 447 opinii), od 11:30"},
+{m:"Kolacja",n:"Kaffi Hornið, Höfn",u:GM("Kaffi Hornið Höfn"),d:"Zupa z langustynek 2 850 ISK, pizza 3 750 ISK, fish and chips 3 950 ISK, burger z renifera 4 150 ISK, makaron z langustynkami 4 350 ISK, kotlety jagnięce 5 350 ISK. Grillowane langustynki (300 g) kosztują 9 150 ISK. W porze kolacji czasem czeka się na stolik.",lo:2850,hi:5350,s:"m",r:"Google 4,5 (2 321 opinii), 11:30–21:00"}],
+"dzien-7":[
+{m:"Śniadanie",n:"Z zapasów kupionych w Höfn",u:U.price,d:"Skyr, chleb, owoce. Obiekt nie ma kuchni, więc kupcie coś, co nie wymaga gotowania.",lo:400,hi:600,s:"k"},
+{m:"Obiad",n:"The Soup Company, Vík",u:GM("The Soup Company Vík"),d:"Zupy po 2 990 ISK z dolewką, panini 2 690 ISK. Szybki i sycący postój w połowie powrotu.",lo:2690,hi:3990,s:"m",r:"Google 4,7 (3 506 opinii)"},
+{m:"Obiad",n:"Black Crust Pizzeria, Vík",u:GM("Black Crust Pizzeria Vík"),d:"Pizze 12″ 3 590–4 590 ISK. Czynne od 12:00, pizza do dzielenia w grupie.",lo:3590,hi:4590,s:"m",r:"Google 4,7 (4 227 opinii)"},
+{m:"Przekąska",n:"The Old Dairy Food Hall, Selfoss",u:U.south,d:"Hala jedzenia w dawnej mleczarni: pierogi chińskie, smash burgery, kuchnia tajska. Dania z hal w Selfoss i Hveragerði kosztują ok. 2 000–3 500 ISK.",lo:2000,hi:3500,s:"c"},
+{m:"Kolacja",n:"Hlemmur Mathöll, Laugavegur 107",u:U.isnet,d:"Hala z ok. 10 stoiskami. Plokkfiskur (ryba z ziemniakami) z ciemnym chlebem 2 400–3 200 ISK, inne dania 1 800–3 200 ISK. Każdy wybierze coś innego.",lo:2400,hi:3200,s:"c"},
+{m:"Kolacja",n:"Tommi's Burger Joint, Reykjavík",u:U.price,d:"Cheeseburger 1 990 ISK, burger z frytkami i napojem 3 190 ISK. Tani i syty posiłek.",lo:1990,hi:3190,s:"c"},
+{m:"Kolacja",n:"101 Reykjavik Street Food",u:U.price,d:"Zupa jagnięca (kjötsúpa) 2 890 ISK. Dla porównania hot dog z Bæjarins Beztu Pylsur kosztuje 920 ISK.",lo:920,hi:2890,s:"c"}],
+"dzien-8":[
+{m:"Śniadanie",n:"Sandholt lub Brauð & Co, Reykjavík",u:U.price,d:"Cappuccino w Sandholt 750 ISK, latte 850 ISK. W Brauð & Co cynamonka 870 ISK, croissant 810 ISK.",lo:1200,hi:1700,s:"c"},
+{m:"Obiad",n:"Stacja paliw po drodze (zupa jagnięca)",u:"https://isnet.is/iceland/food/",d:"Kjötsúpa na stacjach kosztuje 1 500–2 000 ISK. Najtańszy gorący posiłek przed lotniskiem.",lo:1500,hi:2000,s:"c"},
+{m:"Obiad",n:"Hamborgarafabrikkan, Reykjavík",u:U.price,d:"Burger z frytkami 3 899 ISK. Jeśli wolicie usiąść w restauracji, zanim pojedziecie na lotnisko.",lo:3899,hi:3899,s:"c"}]
+};
 const TODO=[
 ["Nocleg 10.09 w Reykjavíku","Jedyna noc bez rezerwacji. Sprawdźcie centrum albo Hafnarfjörður (np. Aska Hraun jeszcze raz). Weźcie darmową anulację i miejsce parkingowe."],
+["Laxarbakki: kolacja 5.09","Restauracja otwiera się o 16:00. Menu w Google Maps jest z 2023, więc ceny mogą być wyższe. Zadzwońcie (+354 551 2783), zapytajcie o godziny kuchni i zarezerwujcie stolik."],
 ["Auto 7-miejscowe z GP i SAAP","Pięć osób z bagażami nie zmieści się w zwykłym SUV-ie."],
 ["Katla Ice Cave, 8.09 rano","Wrzesień to najbardziej oblegany miesiąc. Wybierzcie opcję z darmową anulacją."],
 ["Hik po lodowcu Skaftafell, 9.09 rano","Wersja 3–3,5 h."],
@@ -411,6 +480,9 @@ function r5(x){return Math.round(x/5)*5}
 function dayPlaces(d){var out=[];d.items.forEach(function(it){if(it[1]&&out.indexOf(it[1])<0)out.push(it[1])});return out}
 function dayRoute(d){var out=[];d.items.forEach(function(it){if(it[1]&&out[out.length-1]!==it[1])out.push(it[1])});return out}
 
+function housePts(cx,cy,r){return[[cx,cy-1.35*r],[cx+1.2*r,cy-.12*r],[cx+1.2*r,cy+r],[cx-1.2*r,cy+r],[cx-1.2*r,cy-.12*r]].map(function(p){return p[0].toFixed(1)+","+p[1].toFixed(1)}).join(" ")}
+function mealIcon(){var s=document.createElementNS(NS,"svg");s.setAttribute("viewBox","0 0 24 24");s.setAttribute("class","mealico");s.setAttribute("role","img");s.setAttribute("aria-label","posiłek");
+  ["M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2","M7 2v20","M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"].forEach(function(d){el("path",{d:d},s)});return s}
 function chaikin(pts,n){for(var s=0;s<n;s++){var o=[];for(var i=0;i<pts.length;i++){var a=pts[i],b=pts[(i+1)%pts.length];o.push([a[0]*.75+b[0]*.25,a[1]*.75+b[1]*.25],[a[0]*.25+b[0]*.75,a[1]*.25+b[1]*.75])}pts=o}return pts}
 var OUTS=chaikin(OUT,2),ICES=ICEP.map(function(g){return chaikin(g,2)});
 function drawMap(){
@@ -442,11 +514,12 @@ function drawMap(){
       var q=pos(id),on=hot===id,r=(on?15:12)*k;
       var g=el("g",{style:"cursor:pointer",tabindex:"0",role:"button","aria-label":P[id][0]},svg);
       var fillc="fill:"+(on?"var(--lava)":"var(--accent)")+";stroke:var(--surface);stroke-width:"+(2*k);
-      if(STAYID.indexOf(id)>=0)el("rect",{x:q[0]-r,y:q[1]-r,width:2*r,height:2*r,rx:3*k,style:fillc},g);
+      var isS=STAYID.indexOf(id)>=0,hr=isS?r*1.12:r;
+      if(isS)el("polygon",{points:housePts(q[0],q[1],hr),style:fillc+";stroke-linejoin:round"},g);
       else el("circle",{cx:q[0],cy:q[1],r:r,style:fillc},g);
-      el("text",{x:q[0],y:q[1]+4.2*k,"text-anchor":"middle",style:"font:700 "+(12*k)+"px Inter,sans-serif;fill:var(--accent-ink)"},g,String(i+1));
-      var sd=P[id][5],left=sd==="l",tx=q[0]+(left?-1:1)*(r+4*k),ty=q[1]+4*k,ta=left?"end":"start";
-      if(sd==="u"||sd==="d"){tx=q[0];ta="middle";ty=sd==="u"?q[1]-(r+5*k):q[1]+r+13*k}
+      el("text",{x:q[0],y:q[1]+(isS?.46*hr:0)+4.2*k,"text-anchor":"middle",style:"font:700 "+(12*k)+"px Inter,sans-serif;fill:var(--accent-ink)"},g,String(i+1));
+      var sd=P[id][5],left=sd==="l",ex=isS?1.2*hr:r,tx=q[0]+(left?-1:1)*(ex+4*k),ty=q[1]+4*k,ta=left?"end":"start";
+      if(sd==="u"||sd==="d"){tx=q[0];ta="middle";ty=sd==="u"?q[1]-((isS?1.35*hr:r)+5*k):q[1]+(isS?hr:r)+13*k}
       el("text",{x:tx,y:ty,"text-anchor":ta,style:"font:600 "+(12*k)+"px Inter,sans-serif;fill:var(--fg);paint-order:stroke;stroke:var(--land);stroke-width:"+(3.5*k)+"px;stroke-linejoin:round"},g,SHORT[id]||P[id][0]);
       g.addEventListener("click",function(){setHot(id,true)});
       g.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();setHot(id,true)}});
@@ -459,8 +532,8 @@ function drawMap(){
     Object.keys(seen).forEach(function(id){if(STAYID.indexOf(id)>=0)return;var q=pos(id);el("circle",{cx:q[0],cy:q[1],r:3.5,style:"fill:var(--accent);stroke:var(--surface);stroke-width:1.5"},svg)});
     STAYID.forEach(function(id,i){
       var q=pos(id),open=(i===STAYID.length-1);
-      el("rect",{x:q[0]-8,y:q[1]-8,width:16,height:16,rx:3,style:(open?"fill:var(--surface);stroke:var(--lava);stroke-dasharray:3 2":"fill:var(--accent);stroke:var(--surface)")+";stroke-width:1.8"},svg);
-      el("text",{x:q[0],y:q[1]+4.2,"text-anchor":"middle",style:"font:700 11px Inter,sans-serif;fill:"+(open?"var(--lava)":"var(--accent-ink)")},svg,String(i+1));
+      el("polygon",{points:housePts(q[0],q[1],8.5),style:(open?"fill:var(--surface);stroke:var(--lava);stroke-dasharray:3 2":"fill:var(--accent);stroke:var(--surface)")+";stroke-width:1.8;stroke-linejoin:round"},svg);
+      el("text",{x:q[0],y:q[1]+7.8,"text-anchor":"middle",style:"font:700 11px Inter,sans-serif;fill:"+(open?"var(--lava)":"var(--accent-ink)")},svg,String(i+1));
       lab(id,(open?"7 · do rezerwacji":(SHORT[id]||P[id][0])))});
     lab("kef","Lotnisko KEF");
   }
@@ -494,7 +567,8 @@ function drawDay(){
     var b=h("div",null,null,li),t=h("div","ttl",null,b);
     if(it[1]){li.setAttribute("data-place",it[1]);h("span","num",String(ids.indexOf(it[1])+1),t);
       li.addEventListener("click",function(){setHot(it[1],false)})}
-    h("span",null,it[2],t);
+    var tt=h("span",null,it[2],t);
+    if(it[5])t.insertBefore(mealIcon(),tt);
     if(it[3])h("p","note",it[3],b);
     if(it[4])h("p","tip",it[4],b);
     var pl=it[1],first=pl&&!seenP[pl];if(pl)seenP[pl]=1;
@@ -509,12 +583,38 @@ function drawDay(){
         if(pk)h("span","pill","Parking ok. "+fmt(r5(pk*FX.ISK))+" zł/auto"+(pl==="jokulsarlon"?" (też Diamond Beach)":""),mt);
       }}
   });
+  drawMeals(box,d);
+}
+function withZl(t){
+  var N="\\d{1,3}(?:[\\s\\u00a0\\u202f]\\d{3})+|\\d+";
+  var re=new RegExp("("+N+")(?:\\s?([\u2013\\/])\\s?("+N+"))?(\\s?ISK)(\\/kg)?","g");
+  var z=function(s){return Math.round(parseInt(s.replace(/\D/g,""),10)*FX.ISK)};
+  return t.replace(re,function(all,a,sep,b,isk,kg){
+    var v=b?fmt(z(a))+sep+fmt(z(b)):fmt(z(a));
+    return all+" ("+v+" zł)"});
+}
+function drawMeals(box,d){
+  var rows=MEALS[d.id];if(!rows||!rows.length)return;
+  var c=h("div","card meals",null,box),hd=h("h3",null,null,c);hd.appendChild(mealIcon());hd.appendChild(document.createTextNode("Gdzie zjeść"));
+  h("p","prog","Cena na osobę za jedno danie, bez napojów, w złotych po kursie Wise z 22.11.2026. Źródła ceny: „menu z Google Maps” to zdjęcie menu wrzucone przez gości (daty różne, sprawdźcie aktualne), „menu ze strony lokalu” to oficjalne menu, „przedział Google Maps” to widełki cen na osobę z Google, „cennik” to ceny z publikacji (Guide to Iceland, isnet), „cennik sklepu” to ceny z marketów (Krónan, 7.11.2026), a „szacunek” to moje przybliżenie. Oceny i godziny pochodzą z Google Maps (listopad 2026), a lokale sezonowe w wrześniu 2027 mogą działać inaczej.",c);
+  var w=h("div",null,null,c);w.style.overflowX="auto";
+  var tb=h("table","tbl",null,w),hr=h("tr",null,null,h("thead",null,null,tb));
+  ["Posiłek","Miejsce i co zamówić","Cena/os."].forEach(function(t){h("th",null,t,hr)});
+  var body=h("tbody",null,null,tb);
+  rows.forEach(function(m){
+    var tr=h("tr",null,null,body);h("td","m",m.m,tr);
+    var td=h("td",null,null,tr),a=h("a",null,m.n,td);a.href=m.u;a.target="_blank";a.rel="noopener";a.style.fontWeight="600";
+    h("span","sub",withZl(m.d),td);if(m.r)h("span","rt",m.r,td);
+    var pc=h("td",null,null,tr),lo=r5(m.lo*FX.ISK),hi=r5(m.hi*FX.ISK);
+    h("b",null,(lo===hi||m.lo===m.hi)?"ok. "+fmt(hi)+" zł":fmt(lo)+"–"+fmt(hi)+" zł",pc);
+    h("span","sub",(m.lo===m.hi?fmt(m.lo):fmt(m.lo)+"–"+fmt(m.hi))+" ISK",pc);
+    h("span","tag"+(m.s==="s"?"":" ok"),SRC[m.s],pc)});
 }
 function go(i){cur=i;hot=null;try{history.replaceState(null,"","#"+(i<0?"caly-plan":i===DAYS.length?"noclegi":i>DAYS.length?"koszty":DAYS[i].id))}catch(e){}render()}
 function render(){
   document.querySelectorAll("#chips .chip").forEach(function(b,i){b.setAttribute("aria-selected",String(i-1===cur))});
   var st=cur===DAYS.length,costs=cur===DAYS.length+1;
-  $("layout").hidden=st||costs;$("stays-view").hidden=!st;$("costs").hidden=!costs;
+  $("layout").hidden=st||costs;$("home-extra").hidden=cur!==-1;$("stays-view").hidden=!st;$("costs").hidden=!costs;
   if(st){drawStays();return}
   if(costs){drawCosts();return}
   drawMap();drawDay();
@@ -544,7 +644,7 @@ function drawStays(){
     if(n.note)h("p","tip",n.note,c);
     var bl=h("a",null,n.booked?"Oferta na Booking":"Szukaj na Booking dla tych dat",c);bl.href=n.booked?STAYS[ni][3]:bks(n.town,n.a,n.b);bl.target="_blank";bl.rel="noopener"});
 }
-var CK="islandia2027-costs",S={people:5,buf:0,katla:true,hike:true,boat:"zodiac",sky:true,blue:false,park:true,lodging:"",car:3500,cons:7,fp:274,food:"",other:""};
+var CK="islandia2027-costs",S={people:5,buf:0,katla:true,hike:true,boat:"zodiac",sky:true,blue:false,park:true,lodging:11000,car:3500,cons:7,fp:274,food:"",other:""};
 try{var sv=JSON.parse(localStorage.getItem(CK)||"{}")||{};Object.keys(sv).forEach(function(k){if(k in S&&sv[k]!==""&&sv[k]!=null)S[k]=sv[k]})}catch(e){}
 function save(){try{localStorage.setItem(CK,JSON.stringify(S))}catch(e){}}
 function num(v){var n=parseFloat(String(v).replace(/\s/g,"").replace(",","."));return isFinite(n)&&n>0?n:0}
@@ -598,9 +698,9 @@ function drawCosts(){
   row("park","Parkingi przy atrakcjach, jedno auto",zl(parkISK*FX.ISK)+" zł ("+fmt(parkISK)+" ISK)","check");
   h("p","prog","Sky Lagoon: w 2026 operatorzy podają 12 990–13 990 ISK, tu liczę 14 990 ISK jak w Waszym planie. Skógafoss: opłatę za parking przyjąłem jak w pozostałych miejscach (1 000 ISK), do potwierdzenia. Gullfoss, Dyrhólaey, Djúpalónssandur i inne miejsca bez danych o opłatach nie są liczone.",c);
   h("h3",null,"Pozostałe koszty (wpisz własne kwoty)",c).style.marginTop="8px";
-  h("p","prog","Auto: wstępnie 3 500 zł za cały wyjazd (kwota od Was, można zmienić). Paliwo liczy się samo: suma km z planu dni × spalanie × cena za litr (benzyna 95, średnia ze stacji na Islandii, fuel-prices.eu, 22.11.2026). Cen noclegów i jedzenia nie znalazłem w wiarygodnym źródle, więc wpisz je sami (kwoty dla całej grupy, w złotych).",c);
+  h("p","prog","Auto: wstępnie 3 500 zł za cały wyjazd (kwota od Was, można zmienić). Paliwo liczy się samo: suma km z planu dni × spalanie × cena za litr (benzyna 95, średnia ze stacji na Islandii, fuel-prices.eu, 22.11.2026). Noclegi: domyślnie 11 000 zł za wszystkie 7 nocy dla całej grupy (kwota od Was, wpiszcie faktyczną z rezerwacji). Jedzenia nie liczę automatycznie, więc wpisz własną kwotę (propozycje lokali i ceny są w planie każdego dnia).",c);
   var f2=h("div","fields",null,c);
-  field(f2,"lodging","Noclegi, 7 nocy (zł)");field(f2,"car","Auto 7-os. z ubezpieczeniem (zł)");field(f2,"cons","Spalanie (l/100 km)");field(f2,"fp","Cena paliwa (ISK/l)");field(f2,"food","Jedzenie i zakupy (zł)");field(f2,"other","Inne (zł)");
+  field(f2,"lodging","Noclegi, 7 nocy, cała grupa (zł)");field(f2,"car","Auto 7-os. z ubezpieczeniem (zł)");field(f2,"cons","Spalanie (l/100 km)");field(f2,"fp","Cena paliwa (ISK/l)");field(f2,"food","Jedzenie i zakupy (zł)");field(f2,"other","Inne (zł)");
   var fi=h("p","prog",null,c);fi.appendChild(document.createTextNode("Paliwo: "));refs.fuelinfo=h("b",null,"",fi);
   var sm=h("div","sum",null,c);
   function srow(lbl,k,cls){var d=h("div",cls||null,null,sm);h("span",null,lbl,d);refs[k]=h("b",null,"",d)}
