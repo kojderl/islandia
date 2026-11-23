@@ -61,6 +61,7 @@ header{display:flex;flex-direction:column;gap:8px}
 .tl .ttl{font-weight:600;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
 .tl .num{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:12px;font-weight:700}
 .tl .note{color:var(--muted);font-size:14px}
+.tl .what{font-size:14px;color:var(--fg);margin:2px 0 4px}
 .tl li.hot{background:color-mix(in srgb,var(--accent) 10%,transparent)}
 .tl li[data-place]{cursor:pointer}
 .tl .tip{color:var(--lava);font-size:14px}
@@ -112,6 +113,9 @@ footer{color:var(--muted);font-size:13px}
 .meals .tag{display:inline-block;font-size:11px;font-weight:600;border:1px solid var(--line);border-radius:999px;padding:1px 8px;color:var(--muted);margin-top:3px}
 .meals .tag.ok{color:var(--ok);border-color:var(--ok)}
 .bad{color:var(--bad)}
+.gmap{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;flex:0 0 auto;border-radius:50%;margin-left:4px;vertical-align:middle;align-self:center;text-decoration:none}
+.gmap svg{width:20px;height:20px;display:block}
+.gmap:hover{background:color-mix(in srgb,var(--bad) 14%,transparent)}
 .pill.bad{color:var(--bad);border-color:var(--bad)}
 .card.bad{border-color:var(--bad)}
 .opt .k.bad{color:var(--bad)}
@@ -151,6 +155,7 @@ footer{color:var(--muted);font-size:13px}
   .tbl th,.tbl td{padding:5px 8px}
   ul.plain{gap:2px}
   .sum{gap:3px}
+  .gmap{display:none!important}
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
@@ -248,7 +253,7 @@ jokulsarlon:["Jökulsárlón",64.048,-16.18,-6,-8],
 diamond:["Diamond Beach",64.044,-16.17,12,10],
 hofnG:["Höfn Guesthouse",64.255,-15.21,0,0,"l"],
 vestrahorn:["Vestrahorn i Stokksnes",64.25,-14.97,10,2,"u"],
-selfoss:["Selfoss",63.933,-21.0,-10,-8,"l"]};
+selfoss:["Selfoss",63.933,-21.0,-10,-8,"l","b"]};
 /* Kolejnosc noclegow: indeks = numer nocy (0 = 4.09). Ostatni (rvk) jeszcze niezarezerwowany. */
 const STAYID=["aska","laxar","snaef","barn","holiday","hofnG","rvk"];
 /* Etykiety na mapie calej trasy: [dx, dy, kotwica] */
@@ -293,6 +298,40 @@ const STAYS=[
 ["8.09","Kirkjubæjarklaustur","The Holiday Houses",bk("the-holiday-houses-kirkjubaejarklaustur","08","09"),"Dom z 3 sypialniami i kuchnią, 2 km od centrum. Jutro hik w Skaftafell."],
 ["9.09","Höfn","Höfn Guesthouse",bk("hofn-guesthouse","09","10"),"Zameldowanie 16:00–20:00, bez kuchni (czajnik i mikrofalówka). Kolacja w mieście."],
 ["10.09","Reykjavík","jeszcze do zarezerwowania",bks("Reykjavík","10","11"),"To jedyna noc bez rezerwacji. Sprawdźcie centrum albo Hafnarfjörður (blisko lotniska)."]];
+/* Zapytania do Google Maps dla miejsc na liście (wyszukiwanie po nazwie jest dokładniejsze niż moje przybliżone współrzędne) */
+const GQ={kef:"Keflavík International Airport",aska:"Aska Hraun Hafnarfjörður",rvk:"Reykjavík centrum",skylagoon:"Sky Lagoon",bluelagoon:"Blue Lagoon Iceland",thingvellir:"Þingvellir National Park",geysir:"Geysir Strokkur Haukadalur",gullfoss:"Gullfoss",laxar:"Hotel Laxarbakki",borgarnes:"Borgarnes",budir:"Búðakirkja",arnarstapi:"Arnarstapi",londrangar:"Lóndrangar",djupalon:"Djúpalónssandur",snaef:"Snæfellsjökull Apartments Gufuskálar",kirkjufell:"Kirkjufellsfoss",seljalandsfoss:"Seljalandsfoss",skogafoss:"Skógafoss",barn:"The Barn Norður Foss Vík",vik:"Vík í Mýrdal",reynisfjara:"Reynisfjara Black Sand Beach",dyrholaey:"Dyrhólaey",katla:"Kötlujökull",eldhraun:"Eldhraun",fjadra:"Fjaðrárgljúfur",klaustur:"Kirkjubæjarklaustur",holiday:"The Holiday Houses Kirkjubæjarklaustur",skaftafell:"Skaftafell Visitor Centre",jokulsarlon:"Jökulsárlón Glacier Lagoon",diamond:"Diamond Beach Breiðamerkursandur",hofnG:"Höfn Guesthouse",vestrahorn:"Vestrahorn Stokksnes",selfoss:"Selfoss"};
+/* Wyszukiwanie noclegów, kolejność jak w STAYS (ostatni nocleg nie jest jeszcze zarezerwowany) */
+const STAYQ=["Aska Hraun Hafnarfjörður","Hotel Laxarbakki","Snæfellsjökull Apartments Gufuskálar","The Barn Norður Foss Vík","The Holiday Houses Kirkjubæjarklaustur","Höfn Guesthouse",null];
+/* Krótki opis miejsca: co to jest i co tam ciekawego. Pokazywany przy pierwszym wystąpieniu miejsca w danym dniu. */
+const PDESC={
+kef:"Główne lotnisko Islandii, ok. 50 km od Reykjavíku. W hali przylotów jest sklep bezcłowy i całodobowy sklep spożywczy.",
+gullfoss:"Złoty Wodospad na rzece Hvítá. Woda spada dwoma stopniami (łącznie ok. 32 m) do wąskiego kanionu głębokiego do ok. 70 m, więc czuć tu huk i mgłę nawet z górnego tarasu.",
+geysir:"Pole geotermalne Haukadalur z kipiącymi źródłami. Strokkur wyrzuca słup wody na kilkanaście metrów co kilka minut, a od nazwy Geysir pochodzi słowo „gejzer”, choć sam Geysir jest dziś prawie uśpiony.",
+thingvellir:"Park Narodowy z listy UNESCO. Tu rozchodzą się płyty tektoniczne Ameryki Północnej i Eurazji, a w 930 r. zebrał się pierwszy islandzki parlament, Althing. Można przejść rozpadliną Almannagjá.",
+borgarnes:"Miasteczko na półwyspie w fiordzie Borgarfjörður. Ma duże sklepy i stacje, a także Landnámssetur, muzeum osadnictwa Islandii i sagi o Egilu.",
+budir:"Czarny drewniany kościółek z XIX w. na polu lawowym, pod lodowcem Snæfellsjökull. Kontrast czerni, zielonego mchu i bieli lodowca czyni go jednym z najczęściej fotografowanych miejsc półwyspu.",
+arnarstapi:"Dwie dawne osady rybackie połączone ścieżką po klifach z bazaltowych kolumn. Po drodze jest łuk skalny Gatklettur i kolonie ptaków morskich (wczesną jesienią jest ich mniej).",
+londrangar:"Dwie bazaltowe iglice (ok. 60 i 75 m), pozostałość komina dawnego wulkanu, który rozmyło morze. Ze ścieżki i parkingu widać je z bliska na tle klifów.",
+djupalon:"Czarna plaża z gładkim wulkanicznym żwirem i szczątkami wraku trawlera z 1948 r. Leżą tu cztery kamienie do podnoszenia (od 23 do 154 kg), którymi dawni rybacy sprawdzali swoją siłę.",
+kirkjufell:"Stożkowa góra (463 m) nad zatoką Grundarfjörður. Z wodospadem Kirkjufellsfoss na pierwszym planie to jeden z najbardziej znanych widoków Islandii, który pojawia się też w „Grze o tron”.",
+seljalandsfoss:"Wodospad o wysokości ok. 60 m, za którym prowadzi ścieżka. Można stanąć za kurtyną wody i zobaczyć okolicę przez spadający strumień.",
+skogafoss:"Szeroki na ok. 25 m i wysoki na ok. 60 m wodospad. Przy słońcu tworzy się przy nim tęcza, a schody (ok. 500 stopni) prowadzą na górę, skąd widać rzekę płynącą ku morzu.",
+vik:"Najdalej na południe wysunięta wieś Islandii, mała osada z czarną plażą, kościołem na wzgórzu i sklepem. Dobra baza do Reynisfjara, Dyrhólaey i wycieczek na lodowiec.",
+reynisfjara:"Czarna plaża z kolumnami z bazaltu i jaskinią w klifie. Z wody wystają iglice Reynisdrangar, które według legendy są skamieniałymi trollami. Fale są tu bardzo niebezpieczne.",
+katla:"Jaskinia w lodowcu Kötlujökull, który zsuwa się z lodowca Mýrdalsjökull nad wulkanem Katla. Lód jest poprzecinany pasmami czarnego popiołu, więc ściany mają czarne i błękitne smugi.",
+dyrholaey:"Skalny przylądek z wielkim łukiem skalnym (nazwa znaczy „wzgórze z drzwiami”), latarnią i widokiem na czarne plaże oraz Reynisdrangar. Dobry punkt widokowy, gdy plaża jest zatłoczona.",
+eldhraun:"Jedno z największych pól lawowych na świecie (ok. 565 km²), powstałe w erupcji Laki w 1783 r. Cała lawa jest porośnięta grubą, miękką warstwą mchu, co daje nierealny, zielony krajobraz.",
+fjadra:"Kanion o długości ok. 2 km i głębokości do ok. 100 m, wyrzeźbiony przez rzekę Fjaðrá. Rzeka kręci się między zielonymi ścianami, a ścieżka wzdłuż krawędzi daje widoki z góry.",
+klaustur:"Niewielka osada z sklepem, stacją paliw i kilkoma restauracjami. Warto zobaczyć wodospad Systrafoss nad miasteczkiem i Kirkjugólf, naturalną posadzkę z sześciokątnych bazaltowych kolumn.",
+skaftafell:"Część Parku Narodowego Vatnajökull u stóp lodowca Skaftafellsjökull. Vatnajökull to największy lodowiec Europy pod względem objętości. Najłatwiejszy szlak wiedzie do wodospadu Svartifoss otoczonego czarnymi bazaltowymi kolumnami.",
+jokulsarlon:"Laguna lodowcowa u czoła lodowca Breiðamerkurjökull. Po wodzie dryfują błękitne i białe bryły lodu, a między nimi często pływają foki. Powstała w XX w. i wciąż się powiększa, bo lodowiec się cofa.",
+diamond:"Czarna plaża po drugiej stronie krótkiej rzeki wypływającej z laguny. Morze wyrzuca tu bryły lodu z lodowca, które błyszczą jak diamenty na ciemnym piasku.",
+hofnG:"Port rybacki na południowym wschodzie, uznawany za islandzką stolicę langustynek. Z miasteczka widać lodowiec Vatnajökull, a przy porcie jest kilka dobrych restauracji.",
+vestrahorn:"Poszarpana góra (ok. 450 m) nad czarnymi wydmami półwyspu Stokksnes. Przy spokojnej wodzie odbija się w piasku i zalanych kałużach, więc to jedno z najbardziej fotogenicznych miejsc wschodu.",
+selfoss:"Największe miasto południowej Islandii, nad rzeką Ölfusá. Ma duże sklepy, stacje paliw i food hall w dawnej mleczarni, więc to wygodny przystanek w połowie drogi do Reykjavíku.",
+rvk:"Najdalej na północ położona stolica świata. W centrum są kościół Hallgrímskirkja (z wieżą widokową), sala koncertowa Harpa, stary port i ulica Laugavegur z kawiarniami, sklepami i barami.",
+skylagoon:"Geotermalna laguna z basenem infinity nad oceanem. Do biletu należy rytuał spa (siedem etapów: sauna, zimny prysznic, para) i widok na zachód słońca nad zatoką.",
+bluelagoon:"Najsłynniejsza laguna geotermalna Islandii, w polu lawowym na Reykjanes. Woda ma mleczny, błękitny kolor od krzemionki, a ciepła woda pochodzi z pobliskiej elektrowni geotermalnej."};
 /* item: [time, placeId|null, title, note, tip] */
 const DAYS=[
 {id:"dzien-1",chip:"Sob 4.09",sub:"Przylot",title:"Przylot i dojazd do Hafnarfjörður",stay:0,km:"ok. 40 km",drive:"ok. 45 min",tags:["lot 18:00"],items:[
@@ -384,7 +423,7 @@ const MEALS={
 {m:"Kolacja",n:"Gotowanie w apartamencie",u:U.price,d:"Makaron ok. 450 ISK/kg, pierś z kurczaka ok. 2 770 ISK/kg, ziemniaki ok. 600 ISK/kg. Kolacja dla 5 osób to ok. 4 500 ISK. Zakupy w Borgarnes.",lo:800,hi:1200,s:"k"}],
 "dzien-4":[
 {m:"Śniadanie",n:"Z zapasów z Borgarnes",u:U.price,d:"Apartament ma kuchnię. Jajka, chleb, skyr.",lo:400,hi:600,s:"k"},
-{m:"Obiad",n:"Landnámssetur (Settlement Centre), Borgarnes",u:"https://www.landnam.is/restaurant/",d:"Menu 2026: bufet „Hollustu” 11:30–15:00 za 3 900 ISK, zupa dnia z chlebem 2 800 ISK, większa porcja 3 800 ISK, zupa rybna 2 800/3 800 ISK, burger wołowy 3 900 ISK, plokkfiskur 4 200 ISK.",lo:2800,hi:4200,s:"w",r:"restauracja czynna do końca października"},
+{m:"Obiad",g:"Landnámssetur Borgarnes",n:"Landnámssetur (Settlement Centre), Borgarnes",u:"https://www.landnam.is/restaurant/",d:"Menu 2026: bufet „Hollustu” 11:30–15:00 za 3 900 ISK, zupa dnia z chlebem 2 800 ISK, większa porcja 3 800 ISK, zupa rybna 2 800/3 800 ISK, burger wołowy 3 900 ISK, plokkfiskur 4 200 ISK.",lo:2800,hi:4200,s:"w",r:"restauracja czynna do końca października"},
 {m:"Obiad",n:"Geirabakarí Kaffihús, Borgarnes",u:GM("Geirabakarí Kaffihús Borgarnes"),d:"Piekarnia z kawiarnią przy głównej drodze: kanapki, wypieki, kawa, cappuccino 760 ISK. Tańsza opcja, gdy nie chcecie siadać do pełnego obiadu. Cen kanapek nie widziałem, więc to przedział z Google.",lo:2000,hi:4000,s:"g",r:"Google 4,4 (815 opinii), od 7:30"},
 {m:"Kolacja",n:"Gotowanie w The Barn",u:U.price,d:"Wspólna kuchnia. Zakupy z Selfoss lub Hveragerði: makaron z kurczakiem albo hot dogi, 10 szt. ok. 1 140 ISK.",lo:800,hi:1200,s:"k"},
 {m:"Kolacja",n:"Black Crust Pizzeria, Vík",u:GM("Black Crust Pizzeria Vík"),d:"Pizze 12″ na czarnym cieście 4 190–4 590 ISK (najdroższe z langustynkami i kaczką), na zakwasie 3 590–3 990 ISK. Czynne od 12:00 do ok. 21:00, więc po Reynisfjara zdążycie tylko przy szybkim zamówieniu.",lo:3590,hi:4590,s:"m",r:"Google 4,7 (4 227 opinii)"}],
@@ -405,14 +444,14 @@ const MEALS={
 {m:"Śniadanie",n:"Z zapasów kupionych w Höfn",u:U.price,d:"Skyr, chleb, owoce. Obiekt nie ma kuchni, więc kupcie coś, co nie wymaga gotowania.",lo:400,hi:600,s:"k"},
 {m:"Obiad",n:"The Soup Company, Vík",u:GM("The Soup Company Vík"),d:"Zupy po 2 990 ISK z dolewką, panini 2 690 ISK. Szybki i sycący postój w połowie powrotu.",lo:2690,hi:3990,s:"m",r:"Google 4,7 (3 506 opinii)"},
 {m:"Obiad",n:"Black Crust Pizzeria, Vík",u:GM("Black Crust Pizzeria Vík"),d:"Pizze 12″ 3 590–4 590 ISK. Czynne od 12:00, pizza do dzielenia w grupie.",lo:3590,hi:4590,s:"m",r:"Google 4,7 (4 227 opinii)"},
-{m:"Przekąska",n:"The Old Dairy Food Hall, Selfoss",u:U.south,d:"Hala jedzenia w dawnej mleczarni: pierogi chińskie, smash burgery, kuchnia tajska. Dania z hal w Selfoss i Hveragerði kosztują ok. 2 000–3 500 ISK.",lo:2000,hi:3500,s:"c"},
-{m:"Kolacja",n:"Hlemmur Mathöll, Laugavegur 107",u:U.isnet,d:"Hala z ok. 10 stoiskami. Plokkfiskur (ryba z ziemniakami) z ciemnym chlebem 2 400–3 200 ISK, inne dania 1 800–3 200 ISK. Każdy wybierze coś innego.",lo:2400,hi:3200,s:"c"},
-{m:"Kolacja",n:"Tommi's Burger Joint, Reykjavík",u:U.price,d:"Cheeseburger 1 990 ISK, burger z frytkami i napojem 3 190 ISK. Tani i syty posiłek.",lo:1990,hi:3190,s:"c"},
-{m:"Kolacja",n:"101 Reykjavik Street Food",u:U.price,d:"Zupa jagnięca (kjötsúpa) 2 890 ISK. Dla porównania hot dog z Bæjarins Beztu Pylsur kosztuje 920 ISK.",lo:920,hi:2890,s:"c"}],
+{m:"Przekąska",g:"The Old Dairy Food Hall Selfoss",n:"The Old Dairy Food Hall, Selfoss",u:U.south,d:"Hala jedzenia w dawnej mleczarni: pierogi chińskie, smash burgery, kuchnia tajska. Dania z hal w Selfoss i Hveragerði kosztują ok. 2 000–3 500 ISK.",lo:2000,hi:3500,s:"c"},
+{m:"Kolacja",g:"Hlemmur Mathöll Reykjavík",n:"Hlemmur Mathöll, Laugavegur 107",u:U.isnet,d:"Hala z ok. 10 stoiskami. Plokkfiskur (ryba z ziemniakami) z ciemnym chlebem 2 400–3 200 ISK, inne dania 1 800–3 200 ISK. Każdy wybierze coś innego.",lo:2400,hi:3200,s:"c"},
+{m:"Kolacja",g:"Tommi's Burger Joint Reykjavík",n:"Tommi's Burger Joint, Reykjavík",u:U.price,d:"Cheeseburger 1 990 ISK, burger z frytkami i napojem 3 190 ISK. Tani i syty posiłek.",lo:1990,hi:3190,s:"c"},
+{m:"Kolacja",g:"101 Reykjavik Street Food",n:"101 Reykjavik Street Food",u:U.price,d:"Zupa jagnięca (kjötsúpa) 2 890 ISK. Dla porównania hot dog z Bæjarins Beztu Pylsur kosztuje 920 ISK.",lo:920,hi:2890,s:"c"}],
 "dzien-8":[
-{m:"Śniadanie",n:"Sandholt lub Brauð & Co, Reykjavík",u:U.price,d:"Cappuccino w Sandholt 750 ISK, latte 850 ISK. W Brauð & Co cynamonka 870 ISK, croissant 810 ISK.",lo:1200,hi:1700,s:"c"},
+{m:"Śniadanie",g:"Sandholt Bakery Reykjavík",n:"Sandholt lub Brauð & Co, Reykjavík",u:U.price,d:"Cappuccino w Sandholt 750 ISK, latte 850 ISK. W Brauð & Co cynamonka 870 ISK, croissant 810 ISK.",lo:1200,hi:1700,s:"c"},
 {m:"Obiad",n:"Stacja paliw po drodze (zupa jagnięca)",u:"https://isnet.is/iceland/food/",d:"Kjötsúpa na stacjach kosztuje 1 500–2 000 ISK. Najtańszy gorący posiłek przed lotniskiem.",lo:1500,hi:2000,s:"c"},
-{m:"Obiad",n:"Hamborgarafabrikkan, Reykjavík",u:U.price,d:"Burger z frytkami 3 899 ISK. Jeśli wolicie usiąść w restauracji, zanim pojedziecie na lotnisko.",lo:3899,hi:3899,s:"c"}]
+{m:"Obiad",g:"Hamborgarafabrikkan Reykjavík",n:"Hamborgarafabrikkan, Reykjavík",u:U.price,d:"Burger z frytkami 3 899 ISK. Jeśli wolicie usiąść w restauracji, zanim pojedziecie na lotnisko.",lo:3899,hi:3899,s:"c"}]
 };
 /* Zakładka Kuchnia. Pozycje: [nazwa, opis, znacznik]. Ceny w ISK dostają przelicznik w zł przy wyświetlaniu. */
 const KITCH={
@@ -546,7 +585,14 @@ var FORKP=["M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2","M7 2v20","M21 15V2a5 5 0 0 
 function forkGlyph(g,cx,cy,size,color,halo){
   var sc=size/24,tr="translate("+(cx-12*sc).toFixed(2)+","+(cy-12*sc).toFixed(2)+") scale("+sc.toFixed(4)+")";
   function pass(col,w){var gg=el("g",{transform:tr,style:"fill:none;stroke:"+col+";stroke-width:"+w+";stroke-linecap:round;stroke-linejoin:round"},g);FORKP.forEach(function(d){el("path",{d:d},gg)})}
-  if(halo)pass(halo,5.6);pass(color,2.4)}
+  if(halo)pass(halo,5.2);pass(color,2.2)}
+function gmIcon(q,label){
+  var a=document.createElement("a");a.className="gmap";a.href="https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(q);
+  a.target="_blank";a.rel="noopener";a.title="Otwórz w Google Maps";a.setAttribute("aria-label","Otwórz w Google Maps: "+label);
+  var sv=document.createElementNS(NS,"svg");sv.setAttribute("viewBox","0 0 24 24");sv.setAttribute("aria-hidden","true");
+  el("path",{d:"M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7Z",style:"fill:var(--bad)"},sv);
+  el("circle",{cx:12,cy:9,r:2.8,style:"fill:var(--surface)"},sv);
+  a.appendChild(sv);a.addEventListener("click",function(e){e.stopPropagation()});return a}
 function isOpenStay(s){return s&&s[2]==="jeszcze do zarezerwowania"}
 function chaikin(pts,n){for(var s=0;s<n;s++){var o=[];for(var i=0;i<pts.length;i++){var a=pts[i],b=pts[(i+1)%pts.length];o.push([a[0]*.75+b[0]*.25,a[1]*.75+b[1]*.25],[a[0]*.25+b[0]*.75,a[1]*.25+b[1]*.75])}pts=o}return pts}
 var OUTS=chaikin(OUT,2),ICES=ICEP.map(function(g){return chaikin(g,2)});
@@ -583,12 +629,11 @@ function drawMap(){
       var isS=STAYID.indexOf(id)>=0,open=(id==="rvk"),hr=isS?r*1.12:r;
       var fork=!!mealAt[id],only=fork&&!otherAt[id]&&!isS,sd=P[id][5],left=sd==="l",ex=isS?1.2*hr:r;
       if(only){
-        if(on)el("circle",{cx:q[0],cy:q[1],r:16*k,style:"fill:var(--surface);stroke:var(--lava);stroke-width:"+(2*k)},g);
-        forkGlyph(g,q[0],q[1],26*k,"var(--lava)","var(--surface)");
-        var nx=q[0]+11*k,ny=q[1]+(sd==="u"?11:-11)*k;
-        el("circle",{cx:nx,cy:ny,r:7*k,style:"fill:"+(on?"var(--lava)":"var(--accent)")+";stroke:var(--surface);stroke-width:"+(1.5*k)},g);
+        forkGlyph(g,q[0],q[1],26*k,on?"var(--bad)":"var(--lava)","var(--surface)");
+        var nx=q[0]+13*k,ny=q[1]+(sd==="u"||P[id][6]==="b"?13:-13)*k;
+        el("circle",{cx:nx,cy:ny,r:7.5*k,style:"fill:"+(on?"var(--lava)":"var(--accent)")+";stroke:var(--surface);stroke-width:"+(1.5*k)},g);
         el("text",{x:nx,y:ny+3.4*k,"text-anchor":"middle",style:"font:700 "+(9.5*k)+"px Inter,sans-serif;fill:var(--accent-ink)"},g,String(i+1));
-        if(!left)ex+=6*k;
+        ex=left?14*k:17*k;
       }else{
         var fillc=on?"fill:var(--lava);stroke:var(--surface);stroke-width:"+(2*k)
           :isS&&open?"fill:var(--surface);stroke:var(--bad);stroke-width:"+(2*k)+";stroke-dasharray:"+(4*k)+" "+(3*k)
@@ -597,14 +642,13 @@ function drawMap(){
         else el("circle",{cx:q[0],cy:q[1],r:r,style:fillc},g);
         el("text",{x:q[0],y:q[1]+(isS?.46*hr:0)+4.2*k,"text-anchor":"middle",style:"font:700 "+(12*k)+"px Inter,sans-serif;fill:"+(isS&&open&&!on?"var(--bad)":"var(--accent-ink)")},g,String(i+1));
         if(fork){
-          var bx=isS?q[0]+1.18*hr:q[0]+.8*r,by=isS?q[1]-.8*hr:q[1]-.8*r;
-          if(sd==="u")by=isS?q[1]+.9*hr:q[1]+.8*r;
-          el("circle",{cx:bx,cy:by,r:7.4*k,style:"fill:var(--surface);stroke:var(--lava);stroke-width:"+(1.6*k)},g);
-          forkGlyph(g,bx,by,10.5*k,"var(--lava)",null);
-          if(!left)ex+=6*k}
+          var bx=isS?q[0]+1.25*hr:q[0]+1.15*r,by=isS?q[1]-.85*hr:q[1]-1.15*r;
+          if(sd==="u")by=isS?q[1]+.95*hr:q[1]+1.15*r;
+          forkGlyph(g,bx,by,26*k,"var(--lava)","var(--surface)");
+          if(!left)ex+=9*k}
       }
       var tx=q[0]+(left?-1:1)*(ex+4*k),ty=q[1]+4*k,ta=left?"end":"start";
-      if(sd==="u"||sd==="d"){tx=q[0];ta="middle";ty=sd==="u"?q[1]-((isS?1.35*hr:(only?13*k:r))+5*k):q[1]+(isS?hr:(only?13*k:r))+13*k}
+      if(sd==="u"||sd==="d"){tx=q[0];ta="middle";ty=sd==="u"?q[1]-((isS?1.35*hr:(only?14*k:r))+5*k):q[1]+(isS?hr:(only?14*k:r))+13*k}
       el("text",{x:tx,y:ty,"text-anchor":ta,style:"font:600 "+(12*k)+"px Inter,sans-serif;fill:var(--fg);paint-order:stroke;stroke:var(--land);stroke-width:"+(3.5*k)+"px;stroke-linejoin:round"},g,SHORT[id]||P[id][0]);
       g.addEventListener("click",function(){setHot(id,true)});
       g.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();setHot(id,true)}});
@@ -646,7 +690,7 @@ function drawDay(){
   d.tags.forEach(function(t){h("span","pill",t,m)});
   if(d.stay>=0){var s=STAYS[d.stay],p=h("p","note",null,hd2);p.style.color="var(--muted)";p.appendChild(document.createTextNode("Nocleg: "));
     var a=h("a",null,s[2]+", "+s[1],p);a.href=s[3];a.target="_blank";a.rel="noopener";if(isOpenStay(s)){a.className="bad";a.style.fontWeight="600"}}
-  var ids=dayPlaces(d),ul=h("ul","tl",null,box),seenP={};
+  var ids=dayPlaces(d),ul=h("ul","tl",null,box),seenP={},seenD={};
   d.items.forEach(function(it){
     var li=h("li",null,null,ul);h("time",null,it[0],li);
     var b=h("div",null,null,li),t=h("div","ttl",null,b);
@@ -654,6 +698,8 @@ function drawDay(){
       li.addEventListener("click",function(){setHot(it[1],false)})}
     var tt=h("span",null,it[2],t);
     if(it[5])t.insertBefore(mealIcon(),tt);
+    if(it[1]&&GQ[it[1]])t.appendChild(gmIcon(GQ[it[1]],it[2]));
+    if(it[1]&&PDESC[it[1]]&&!seenD[it[1]]){seenD[it[1]]=1;h("p","what",PDESC[it[1]],b)}
     if(it[3])h("p","note",it[3],b);
     if(it[4])h("p","tip",it[4],b);
     var pl=it[1],first=pl&&!seenP[pl];if(pl)seenP[pl]=1;
@@ -689,6 +735,8 @@ function drawMeals(box,d){
   rows.forEach(function(m){
     var tr=h("tr",null,null,body);h("td","m",m.m,tr);
     var td=h("td",null,null,tr),a=h("a",null,m.n,td);a.href=m.u;a.target="_blank";a.rel="noopener";a.style.fontWeight="600";
+    var gq=m.g||(m.u.indexOf("/maps/search/")>0?decodeURIComponent(m.u.split("/maps/search/")[1]):null);
+    if(gq)td.appendChild(gmIcon(gq,m.n));
     h("span","sub",withZl(m.d),td);if(m.r)h("span","rt",m.r,td);
     var pc=h("td",null,null,tr),lo=r5(m.lo*FX.ISK),hi=r5(m.hi*FX.ISK);
     h("b",null,(lo===hi||m.lo===m.hi)?"ok. "+fmt(hi)+" zł":fmt(lo)+"–"+fmt(hi)+" zł",pc);
@@ -720,7 +768,7 @@ function drawStays(){
     var c=h("div","card"+(n.booked?"":" bad"),null,g);
     h("h3",null,n.d+" · "+n.town,c);
     var o=h("div","opt",null,c);h("span","k"+(n.booked?"":" bad"),n.booked?"Zarezerwowane":"Do zarezerwowania",o);
-    var t=h("div",null,null,o);h("b",null,n.cur.n+" ",t);h("span","pill"+(n.booked?(n.cur.ok===1?" ok":n.cur.ok<0?" warn2":""):" bad"),n.cur.t,t);
+    var t=h("div",null,null,o);h("b",null,n.cur.n+" ",t);if(n.booked&&STAYQ[ni])t.appendChild(gmIcon(STAYQ[ni],n.cur.n));h("span","pill"+(n.booked?(n.cur.ok===1?" ok":n.cur.ok<0?" warn2":""):" bad"),n.cur.t,t);
     h("p","note",n.cur.f,o).style.color="var(--muted)";
     n.alts.forEach(function(a){
       var p=h("div","opt",null,c);h("span","k","Alternatywa",p);
@@ -823,8 +871,11 @@ function mk(label,sub,i){var b=h("button","chip",null,chips);b.setAttribute("rol
 mk("Cała trasa","8 dni",-1);DAYS.forEach(function(d,i){mk(d.chip,d.sub,i)});mk("Noclegi","do rezerwacji: 1",DAYS.length).lastChild.className="bad";mk("Kuchnia","co jeść",DAYS.length+1);mk("Koszty","podsumowanie",DAYS.length+2);
 
 var st=$("stays");
-STAYS.forEach(function(s){var r=h("div","stay",null,st);h("span","d",s[0]+" · "+s[1],r);
-  var a=h("a",null,s[2],r);a.href=s[3];a.target="_blank";a.rel="noopener";a.style.fontWeight="600";if(isOpenStay(s))a.className="bad";h("span","note",s[4],r).style.color="var(--muted)"});
+STAYS.forEach(function(s,si){var r=h("div","stay",null,st);h("span","d",s[0]+" · "+s[1],r);
+  var tl=h("div",null,null,r);tl.style.cssText="display:flex;align-items:center;gap:6px";
+  var a=h("a",null,s[2],tl);a.href=s[3];a.target="_blank";a.rel="noopener";a.style.fontWeight="600";if(isOpenStay(s))a.className="bad";
+  if(STAYQ[si])tl.appendChild(gmIcon(STAYQ[si],s[2]));
+  h("span","note",s[4],r).style.color="var(--muted)"});
 
 var KEY="islandia2027-todo2",saved={};
 try{saved=JSON.parse(localStorage.getItem(KEY)||"{}")||{}}catch(e){saved={}}
