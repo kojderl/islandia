@@ -62,6 +62,9 @@ header{display:flex;flex-direction:column;gap:8px}
 .tl .num{display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:12px;font-weight:700}
 .tl .note{color:var(--muted);font-size:14px}
 .tl .what{font-size:14px;color:var(--fg);margin:2px 0 4px}
+.tl .puff{font-size:13px;color:var(--muted);margin:0 0 4px}.tl .puff b{color:var(--accent-ink)}
+.alt .eyebrow{margin:0}.alt h3{margin:0}.alt p{margin:0}.altl{margin:0;display:grid;grid-template-columns:minmax(0,9.5rem) minmax(0,1fr);gap:8px 14px;font-size:14px}.altl dt{font-weight:600;color:var(--muted)}.altl dd{margin:0}.alt .links{font-size:14px}
+@media (max-width:560px){.altl{grid-template-columns:minmax(0,1fr);gap:2px}.altl dd{margin-bottom:8px}}
 .tl li.hot{background:color-mix(in srgb,var(--accent) 10%,transparent)}
 .tl li[data-place]{cursor:pointer}
 .tl .tip{color:var(--lava);font-size:14px}
@@ -397,8 +400,8 @@ const DAYS=[
 ["19:30","skylagoon","Sky Lagoon (opcjonalnie)","Jesienią czynne do 22:00. Możecie też zostawić wieczór na kolację w mieście.","Blue Lagoon zróbcie jutro rano zamiast Sky Lagoon, nie obie."]]},
 {id:"dzien-8",chip:"Sob 11.09",sub:"Wylot",title:"Wylot",stay:-1,km:"ok. 70 km",drive:"ok. 1,2 h",tags:["lot 18:50"],items:[
 ["08:30","rvk","Śniadanie i wymeldowanie","Spakowane auto, zapas na korki.","",3],
-["10:30","bluelagoon","Blue Lagoon (opcjonalnie)","25 min od lotniska. Wymaga rezerwacji i sprawdzenia drogi.","Alternatywa: Reykjanes (Gunnuhver, Most między kontynentami)."],
-["12:30",null,"Obiad przed lotniskiem","Tanio i szybko, bo na lotnisku jest drożej.","",1],
+["10:30","bluelagoon","Blue Lagoon (opcjonalnie)","25 min od lotniska. Wymaga rezerwacji i sprawdzenia drogi.","Alternatywa: Reykjanes (Gunnuhver, Most między kontynentami). Albo rejs z wielorybami i delfinami, opis pod planem dnia."],
+["12:30",null,"Obiad przed lotniskiem","Tanio i szybko, bo na lotnisku jest drożej. Po rejsie najbliżej jest Icelandic Street Food przy Lækjargata (zupa w chlebowej misie).","",1],
 ["13:30",null,"Tankowanie","Zwrot auta zwykle z pełnym bakiem."],
 ["14:30","kef","Zwrot samochodu","Zostawcie zapas na formalności."],
 ["15:45","kef","Odprawa","Wylot 18:50."]]}];
@@ -450,6 +453,7 @@ const MEALS={
 {m:"Kolacja",g:"101 Reykjavik Street Food",n:"101 Reykjavik Street Food",u:U.price,d:"Zupa jagnięca (kjötsúpa) 2 890 ISK. Dla porównania hot dog z Bæjarins Beztu Pylsur kosztuje 920 ISK.",lo:920,hi:2890,s:"c"}],
 "dzien-8":[
 {m:"Śniadanie",g:"Sandholt Bakery Reykjavík",n:"Sandholt lub Brauð & Co, Reykjavík",u:U.price,d:"Cappuccino w Sandholt 750 ISK, latte 850 ISK. W Brauð & Co cynamonka 870 ISK, croissant 810 ISK.",lo:1200,hi:1700,s:"c"},
+{m:"Obiad",g:"Icelandic Street Food Lækjargata 8 Reykjavík",n:"Icelandic Street Food, Lækjargata 8",u:"https://icelandicfoods.com",d:"Dobry wybór po rejsie, ok. 1 km od Starego Portu. Na tablicy trzy zupy w chlebowej misie po 3 000 ISK: jagnięca, pomidorowa na ostro i z owoców morza (bisque z langustynek z krewetkami), a do tego plokkfiskur, czyli zapiekanka rybna z dorszem i puree (bez ceny na tablicy). Goście piszą, że zupy można dolewać bez limitu, a gofry i kawa są w cenie, co warto potwierdzić na miejscu. Naleśniki 1 000 ISK, kawa lub herbata 500 ISK, piwo 1 650–1 750 ISK, sfermentowany rekin 600 ISK.",lo:3000,hi:3000,s:"m",r:"Google 4,6 (7 293 opinii), czynne do 22:00"},
 {m:"Obiad",n:"Stacja paliw po drodze (zupa jagnięca)",u:"https://isnet.is/iceland/food/",d:"Kjötsúpa na stacjach kosztuje 1 500–2 000 ISK. Najtańszy gorący posiłek przed lotniskiem.",lo:1500,hi:2000,s:"c"},
 {m:"Obiad",g:"Hamborgarafabrikkan Reykjavík",n:"Hamborgarafabrikkan, Reykjavík",u:U.price,d:"Burger z frytkami 3 899 ISK. Jeśli wolicie usiąść w restauracji, zanim pojedziecie na lotnisko.",lo:3899,hi:3899,s:"c"}]
 };
@@ -513,7 +517,25 @@ const TODO=[
 ["Buty za kostkę dla każdego","Wymagane na Katli i na hiku."],
 ["Karta z PIN-em do dystrybutorów","Samoobsługowe stacje paliw."],
 ["Aplikacje: safetravel.is, road.is, vedur.is","Do sprawdzania co rano."],
-["Alkohol w sklepie bezcłowym na lotnisku","Przy przylocie, 4.09."]];
+["Alkohol w sklepie bezcłowym na lotnisku","Przy przylocie, 4.09."],
+["Opcjonalnie: rejs z wielorybami, 11.09 o 9:00","Zamiast Blue Lagoon. Elding, 14 500 ISK od osoby. Sprawdźcie cennik na 2027 i warunki zwrotu przy złej pogodzie, najlepiej rezerwować z darmową anulacją."]];
+/* Maskonury: gdzie je spotkać. Sezon: koniec kwietnia do połowy sierpnia (south.is), więc 8.09 to już po sezonie. */
+const PUFF={
+dyrholaey:"Jedno z najpewniejszych miejsc na południu, żeby zobaczyć maskonury: gnieżdżą się na krawędziach klifów. Sezon trwa od końca kwietnia do połowy sierpnia, więc na początku września kolonia jest już zwykle pusta i szansa na spotkanie jest niewielka.",
+reynisfjara:"Kolonie maskonurów są na zboczach góry Reynisfjall nad plażą, a nie na samej plaży. Ptaki siedzą tam do połowy sierpnia, więc we wrześniu raczej ich nie zobaczycie.",
+vik:"Maskonury gnieżdżą się na klifach wokół wsi. Sezon kończy się w połowie sierpnia, więc podczas tego wyjazdu to już po sezonie."};
+/* Alternatywa pod planem dnia: rejs z wielorybami i delfinami (Elding, cennik 1.04.2025-31.03.2027) */
+const ALT={"dzien-8":{t:"Rejs z wielorybami i delfinami z Reykjavíku",
+lead:"Koleżanka poleciła rejs, na którym można zobaczyć humbaki i delfiny. Z Waszej trasy mieści się on tylko w ostatnim dniu, zamiast opcjonalnego Blue Lagoon.",
+rows:[
+["Który dzień","Sobota 11.09, rejs o 9:00. Kończy się ok. 12:00–12:30, więc zostaje czas na obiad w centrum, tankowanie i zwrot auta o 14:30."],
+["Dlaczego nie inne dni","4.09 lądujecie o 18:00, a od 5. do 10.09 jesteście daleko od Reykjavíku. Rejsy ze Snæfellsnesu 6.09 są możliwe, ale ten dzień jest już pełen, a wrzesień nie jest tam szczytem sezonu. Wieczorny rejs 10.09 o 17:00 odpada, bo do Reykjavíku wracacie dopiero ok. 17:30."],
+["Rejs","Elding, klasyczny rejs ze Starego Portu w Reykjavíku. We wrześniu są odjazdy o 9:00, 13:00 i 17:00, rejs trwa 2,5–3,5 h. Termin 13:00 odpada, bo wróciłby ok. 16:30, a lot macie o 18:50."],
+["Co można zobaczyć","Operator podaje jako najczęstsze humbaki, płetwale minke, delfiny i morświny. Obserwacja nie jest gwarantowana."],
+["Cena","14 500 ISK od osoby, dzieci 7–15 lat 7 250 ISK, do 6 lat za darmo. Dla pięciu dorosłych 72 500 ISK. Cennik Elding obowiązuje do 31.03.2027, więc cena na wrzesień 2027 może się zmienić."],
+["Jak to ułożyć","Śniadanie i wymeldowanie przesuńcie przed 8:00, spakujcie auto wieczorem i dojedźcie do portu z zapasem. Rejs odwołuje się przy złej pogodzie, a w dniu wylotu nie ma dnia zapasowego."],
+["Maskonury","Rejsy do maskonurów z Reykjavíku kończą się ok. 20 sierpnia, więc we wrześniu to rejs wyłącznie na wieloryby i delfiny."]],
+links:[["Godziny i ceny na stronie Elding","https://elding.is/schedule-and-prices"],["Elding na Google Maps","https://www.google.com/maps/search/?api=1&query=Elding+Whale+Watching+Reykjav%C3%ADk"]]}};
 /* Kursy: Wise, 22.11.2026 */
 const FX={ISK:0.03249,USD:4.064,EUR:4.404};
 const TA="https://www.tripadvisor.com/Attraction_Review-";
@@ -547,7 +569,8 @@ hike:{cur:"USD",amt:115,from:1},
 zodiac:{cur:"ISK",amt:16900},
 amphi:{cur:"ISK",amt:7100},
 sky:{cur:"ISK",amt:14990},
-blue:{cur:"ISK",amt:12990,from:1}};
+blue:{cur:"ISK",amt:12990,from:1},
+whale:{cur:"ISK",amt:14500}};
 const FEEKEY={katla:"katla",skaftafell:"hike",jokulsarlon:"zodiac",skylagoon:"sky",bluelagoon:"blue"};
 /* Parking za jedno auto, ISK (dane z 2025, część do potwierdzenia) */
 const PARK={thingvellir:1000,geysir:1000,seljalandsfoss:900,skogafoss:1000,reynisfjara:1000,kirkjufell:1000,fjadra:1000,skaftafell:1000,jokulsarlon:1000};
@@ -699,7 +722,8 @@ function drawDay(){
     var tt=h("span",null,it[2],t);
     if(it[5])t.insertBefore(mealIcon(),tt);
     if(it[1]&&GQ[it[1]])t.appendChild(gmIcon(GQ[it[1]],it[2]));
-    if(it[1]&&PDESC[it[1]]&&!seenD[it[1]]){seenD[it[1]]=1;h("p","what",PDESC[it[1]],b)}
+    if(it[1]&&PDESC[it[1]]&&!seenD[it[1]]){seenD[it[1]]=1;h("p","what",PDESC[it[1]],b);
+      if(PUFF[it[1]]){var pf=h("p","puff",null,b);h("b",null,"Maskonury. ",pf);pf.appendChild(document.createTextNode(PUFF[it[1]]))}}
     if(it[3])h("p","note",it[3],b);
     if(it[4])h("p","tip",it[4],b);
     var pl=it[1],first=pl&&!seenP[pl];if(pl)seenP[pl]=1;
@@ -714,7 +738,7 @@ function drawDay(){
         if(pk)h("span","pill","Parking ok. "+fmt(r5(pk*FX.ISK))+" zł/auto"+(pl==="jokulsarlon"?" (też Diamond Beach)":""),mt);
       }}
   });
-  drawMeals(box,d);
+  drawAlt(box,d);drawMeals(box,d);
 }
 function withZl(t){
   var N="\\d{1,3}(?:[\\s\\u00a0\\u202f]\\d{3})+|\\d+";
@@ -724,6 +748,14 @@ function withZl(t){
     var v=b?fmt(z(a))+sep+fmt(z(b)):fmt(z(a));
     return all+" ("+v+" zł)"});
 }
+function drawAlt(box,d){
+  var a=ALT[d.id];if(!a)return;
+  var c=h("div","card alt",null,box);
+  h("span","eyebrow","Alternatywna atrakcja",c);h("h3",null,a.t,c);h("p",null,a.lead,c);
+  var dl=h("dl","altl",null,c);
+  a.rows.forEach(function(r){h("dt",null,r[0],dl);h("dd",null,withZl(r[1]),dl)});
+  var ln=h("p","links",null,c);
+  a.links.forEach(function(l,i){if(i)ln.appendChild(document.createTextNode(" · "));var x=h("a",null,l[0],ln);x.href=l[1];x.target="_blank";x.rel="noopener"})}
 function drawMeals(box,d){
   var rows=MEALS[d.id];if(!rows||!rows.length)return;
   var c=h("div","card meals",null,box),hd=h("h3",null,null,c);hd.appendChild(mealIcon());hd.appendChild(document.createTextNode("Gdzie zjeść"));
@@ -800,7 +832,7 @@ function drawKitchen(){
   KITCH.src.forEach(function(x){var li=h("li","src",null,ul),a=h("a",null,x[0],li);a.href=x[1];a.target="_blank";a.rel="noopener"});
   h("p","prog","Opinie o smaku to ogólny konsensus przewodników, nie moje własne testy. Ceny: patrz tabelki „Gdzie zjeść” przy każdym dniu, w nawiasach przeliczenie po kursie Wise z 22.11.2026.",sc);
 }
-var CK="islandia2027-costs",S={people:5,buf:0,katla:true,hike:true,boat:"zodiac",sky:true,blue:false,park:true,lodging:11000,car:3500,cons:7,fp:274,food:"",other:""};
+var CK="islandia2027-costs",S={people:5,buf:0,katla:true,hike:true,boat:"zodiac",sky:true,blue:false,whale:false,park:true,lodging:11000,car:3500,cons:7,fp:274,food:"",other:""};
 try{var sv=JSON.parse(localStorage.getItem(CK)||"{}")||{};Object.keys(sv).forEach(function(k){if(k in S&&sv[k]!==""&&sv[k]!=null)S[k]=sv[k]})}catch(e){}
 function save(){try{localStorage.setItem(CK,JSON.stringify(S))}catch(e){}}
 function num(v){var n=parseFloat(String(v).replace(/\s/g,"").replace(",","."));return isFinite(n)&&n>0?n:0}
@@ -816,7 +848,7 @@ function lineTotal(k){
   return S[k]?cvt(FEE[k])*n:0}
 function updateCosts(){
   var n=Math.max(1,num(S.people)||1),sub=0,other=0;
-  ["katla","hike","boat","sky","blue","park"].forEach(function(k){var t=lineTotal(k);sub+=t;refs[k].textContent=zl(t)+" zł"});
+  ["katla","hike","boat","sky","blue","whale","park"].forEach(function(k){var t=lineTotal(k);sub+=t;refs[k].textContent=zl(t)+" zł"});
   var withBuf=sub*(1+num(S.buf)/100);
   ["lodging","car","food","other"].forEach(function(k){other+=num(S[k])});
   var fc=fuelCalc();other+=fc.pln;
@@ -851,8 +883,9 @@ function drawCosts(){
   row("boat","Rejs po lagunie Jökulsárlón, 9.09","Zodiak "+pe(FEE.zodiac)+", amfibia "+pe(FEE.amphi),"select");
   row("sky","Sky Lagoon, 10.09",pe(FEE.sky),"check");
   row("blue","Blue Lagoon, 11.09 (zamiast Sky Lagoon)","od "+pe(FEE.blue),"check");
+  row("whale","Rejs z wielorybami, Reykjavík, 11.09 (zamiast Blue Lagoon)",pe(FEE.whale),"check");
   row("park","Parkingi przy atrakcjach, jedno auto",zl(parkISK*FX.ISK)+" zł ("+fmt(parkISK)+" ISK)","check");
-  h("p","prog","Sky Lagoon: w 2026 operatorzy podają 12 990–13 990 ISK, tu liczę 14 990 ISK jak w Waszym planie. Skógafoss: opłatę za parking przyjąłem jak w pozostałych miejscach (1 000 ISK), do potwierdzenia. Gullfoss, Dyrhólaey, Djúpalónssandur i inne miejsca bez danych o opłatach nie są liczone.",c);
+  h("p","prog","Sky Lagoon: w 2026 operatorzy podają 12 990–13 990 ISK, tu liczę 14 990 ISK jak w Waszym planie. Skógafoss: opłatę za parking przyjąłem jak w pozostałych miejscach (1 000 ISK), do potwierdzenia. Rejs z wielorybami zastępuje Blue Lagoon, więc nie zaznaczajcie obu. Gullfoss, Dyrhólaey, Djúpalónssandur i inne miejsca bez danych o opłatach nie są liczone.",c);
   h("h3",null,"Pozostałe koszty (wpisz własne kwoty)",c).style.marginTop="8px";
   h("p","prog","Auto: wstępnie 3 500 zł za cały wyjazd (kwota od Was, można zmienić). Paliwo liczy się samo: suma km z planu dni × spalanie × cena za litr (benzyna 95, średnia ze stacji na Islandii, fuel-prices.eu, 22.11.2026). Noclegi: domyślnie 11 000 zł za wszystkie 7 nocy dla całej grupy (kwota od Was, wpiszcie faktyczną z rezerwacji). Jedzenia nie liczę automatycznie, więc wpisz własną kwotę (propozycje lokali i ceny są w planie każdego dnia).",c);
   var f2=h("div","fields",null,c);
